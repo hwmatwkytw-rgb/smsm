@@ -12,7 +12,7 @@ module.exports.config = {
   cooldowns: 5
 };
 
-const devID = "61570782968645"; // 🧑‍💻 ايدي المطور
+const devID = "61570782968645"100018490916970; // 🧑‍💻 ايدي المطور
 const bannedUsers = [];
 const adminsFile = __dirname + "/admins.json";
 
