@@ -50,16 +50,18 @@ module.exports.run = async function({ api, event, args, Users, Threads}) {
   try {
     await api.removeUserFromGroup(targetID, threadID);
 
-    // إرسال الصورة من الرابط
+    // إرسال الصورة مع الرسالة بعد الطرد مباشرة
     const imageUrl = "https://i.ibb.co/dwvYh0Yz/3098e2fb48d8ac91fe240de5ba4ff977.jpg";
     const path = __dirname + "/temp_ban.jpg";
     const response = await axios.get(imageUrl, { responseType: "arraybuffer" });
     fs.writeFileSync(path, Buffer.from(response.data, "utf-8"));
 
-    api.sendMessage({body: "كان عب معبعب <(｀^´)>", attachment: fs.createReadStream(path)}, threadID, messageID);
+    api.sendMessage({
+      body: "تم تنفيذ حكم الاعدام 🐸☝🏿",
+      attachment: fs.createReadStream(path)
+    }, threadID, messageID);
 
-    // حذف الصورة المؤقتة بعد الإرسال
-    fs.unlinkSync(path);
+    // ✅ إزالة حذف الصورة لتبقى موجودة
 
   } catch (err) {
     console.error("❌ فشل في طرد العضو:", err.message);
@@ -84,16 +86,18 @@ module.exports.handleReply = async function({ api, event, handleReply}) {
   try {
     await api.removeUserFromGroup(targetID, threadID);
 
-    // إرسال الصورة من الرابط
+    // إرسال الصورة مع الرسالة بعد الطرد مباشرة
     const imageUrl = "https://i.ibb.co/dwvYh0Yz/3098e2fb48d8ac91fe240de5ba4ff977.jpg";
     const path = __dirname + "/temp_ban.jpg";
     const response = await axios.get(imageUrl, { responseType: "arraybuffer" });
     fs.writeFileSync(path, Buffer.from(response.data, "utf-8"));
 
-    api.sendMessage({body: "كان عب معبعب <(｀^´)>", attachment: fs.createReadStream(path)}, threadID, messageID);
+    api.sendMessage({
+      body: "تم تنفيذ حكم الاعدام 🐸☝🏿",
+      attachment: fs.createReadStream(path)
+    }, threadID, messageID);
 
-    // حذف الصورة المؤقتة بعد الإرسال
-    fs.unlinkSync(path);
+    // ✅ الصورة تبقى موجودة ولا نحذفها
 
   } catch (err) {
     console.error("❌ فشل في طرد العضو:", err.message);
