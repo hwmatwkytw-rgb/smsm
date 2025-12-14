@@ -4,10 +4,10 @@ const path = require("path");
 
 module.exports.config = {
   name: "رانك",
-  version: "1.2.0",
+  version: "1.3.0",
   hasPermssion: 0,
   credits: "GPT-5",
-  description: "يعرض بطاقة الرانك الخاصة بك مع شريط تقدم وخلفية",
+  description: "Rank card style",
   commandCategory: "الألعاب",
   usages: "رانك",
   cooldowns: 5
@@ -18,71 +18,76 @@ module.exports.run = async function ({ api, event, Users, Currencies }) {
     const userID = event.senderID;
     const userName = await Users.getNameUser(userID);
 
-    // بيانات XP (يمكن ربطها بنظامك)
     const data = await Currencies.getData(userID);
-    const exp = data.exp || 0;
-    const level = Math.floor(exp / 1000);
-    const expForNextLevel = 1000;
-    const progress = Math.min(exp / expForNextLevel, 1);
+    const exp = data.exp || 30;
+    const maxExp = 37;
+    const level = Math.floor(exp / 10);
+    const rank = 19;
 
-    // تحميل صورة المستخدم
+    const progress = exp / maxExp;
+
+    // صورة الحساب
     const avatarURL = `https://graph.facebook.com/${userID}/picture?width=512&height=512`;
     const avatar = await Jimp.read(avatarURL);
-    avatar.resize(180, 180).circle();
+    avatar.resize(170, 170).circle();
 
-    // إنشاء البطاقة بلون صلب
-    const card = new Jimp(900, 250, "#1e293b");
+    // الخلفية
+    const card = await Jimp.read(path.join(__dirname, "rank_bg.png"));
+    card.resize(900, 300);
 
-    // تحميل الخطوط
-    const fontBig = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
+    // الخطوط
+    const fontName = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
     const fontSmall = await Jimp.loadFont(Jimp.FONT_SANS_16_WHITE);
+    const fontMid = await Jimp.loadFont(Jimp.FONT_SANS_24_WHITE);
 
-    // دمج صورة البروفايل
-    card.composite(avatar, 30, 35);
+    // دمج الصورة
+    card.composite(avatar, 40, 65);
 
-    // كتابة البيانات بالإنجليزي
-    card.print(fontBig, 240, 50, `Name: ${userName}`);
-    card.print(fontSmall, 240, 110, `Level: ${level}`);
-    card.print(fontSmall, 240, 150, `XP: ${exp} / ${expForNextLevel}`);
+    // الاسم
+    card.print(fontName, 250, 40, userName);
 
-    // رسم شريط التقدم
-    const barWidth = 500;
-    const barHeight = 25;
-    const xBar = 240;
-    const yBar = 190;
+    // Rank & Level
+    card.print(fontMid, 250, 95, `Rank ${rank}`);
+    card.print(fontSmall, 250, 135, `Lv.${level}`);
+
+    // XP numbers
+    card.print(fontSmall, 700, 135, `${exp}/${maxExp}`);
+
+    // XP bar
+    const barX = 250;
+    const barY = 170;
+    const barW = 550;
+    const barH = 20;
 
     // خلفية الشريط
-    card.scan(xBar, yBar, barWidth, barHeight, function (x, y, idx) {
-      this.bitmap.data[idx + 0] = 100;
-      this.bitmap.data[idx + 1] = 100;
-      this.bitmap.data[idx + 2] = 100;
+    card.scan(barX, barY, barW, barH, function (x, y, idx) {
+      this.bitmap.data[idx + 0] = 220;
+      this.bitmap.data[idx + 1] = 220;
+      this.bitmap.data[idx + 2] = 220;
       this.bitmap.data[idx + 3] = 255;
     });
 
-    // جزء التقدم
-    card.scan(xBar, yBar, barWidth * progress, barHeight, function (x, y, idx) {
+    // التقدم
+    card.scan(barX, barY, barW * progress, barH, function (x, y, idx) {
       this.bitmap.data[idx + 0] = 255;
-      this.bitmap.data[idx + 1] = 215;
-      this.bitmap.data[idx + 2] = 0;
+      this.bitmap.data[idx + 1] = 255;
+      this.bitmap.data[idx + 2] = 255;
       this.bitmap.data[idx + 3] = 255;
     });
 
-    // حفظ البطاقة
-    const outputPath = path.join(__dirname, "rank_card.png");
-    await card.writeAsync(outputPath);
+    const out = path.join(__dirname, "rank.png");
+    await card.writeAsync(out);
 
-    // إرسال البطاقة
     api.sendMessage(
       {
-        body: "🎖️ Your Rank Card:",
-        attachment: fs.createReadStream(outputPath)
+        attachment: fs.createReadStream(out)
       },
       event.threadID,
-      () => fs.unlinkSync(outputPath)
+      () => fs.unlinkSync(out)
     );
 
   } catch (e) {
     console.log(e);
-    api.sendMessage("❌ Error creating the rank card.", event.threadID);
+    api.sendMessage("❌ Error creating rank card", event.threadID);
   }
 };
