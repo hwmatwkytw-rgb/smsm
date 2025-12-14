@@ -1,11 +1,10 @@
 {
-    "INFO": "📌 المطور الوحيد للبوت: 61570782968645",
     "language": "vi",
     "DeveloperMode": false,
     "autoCreateDB": true,
     "iconUnsend": {
         "status": true,
-        "icon": "🪙"
+        "icon": "⌛"
     },
     "notiGroup": false,
     "NOTIFICATION": true,
@@ -14,14 +13,14 @@
     "commandDisabled": [],
     "eventDisabled": [],
     "BOTNAME": "〖⏳〗〖 ⤹  𝑲𝒀𝑹𝑶𝑺 ❘  𝑩𝑶𝑻 ⇊ 〗",
-    "AMDIN_NAME": "كولو",
-    "FACEBOOK_ADMIN": "https://www.facebook.com/61570782968645",
+    "AMDIN_NAME": "𝐁𝐎𝐓",
+    "FACEBOOK_ADMIN": "https://www.facebook.com/DoraYogiEXE",
     "PREFIX": "/",
     "ADMINBOT": [
         "61570782968645"
     ],
     "NDH": [
-        "61570782968645"
+        ""
     ],
     "DATABASE": {
         "sqlite": {
@@ -38,6 +37,20 @@
         "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 15_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.1 Mobile/15E148 Safari/604.1"
     },
     "version": "1.2.14",
+    "menu": {
+        "autoUnsend": {
+            "status": true,
+            "timeOut": 60
+        },
+        "sendAttachments": {
+            "status": true,
+            "random": true,
+            "url": "./media/fblite_video.mp4"
+        }
+    },
+    "log": {
+        "enable": true
+    },
     "cave": {
         "cooldownTime": 100000
     },
@@ -45,8 +58,44 @@
         "cooldownTime": 540000,
         "rewardCoin": 500
     },
+    "math": {
+        "WOLFRAM": "T8J8YV-H265UQ762K"
+    },
+    "minecraft": {
+        "APIKEY": ""
+    },
+    "randomname": {
+        "APIKEY": "mi451266190"
+    },
+    "subnau": {
+        "APIKEY": ""
+    },
+    "tikinfo": {
+        "apikey": "fOeckmtu"
+    },
+    "xidach": {
+        "maxPlayers": 5,
+        "normalWinBonus": 1,
+        "superWinBonus": 2,
+        "epicWinBonus": 4
+    },
+    "spam": {
+        "spamDelay": 2
+    },
+    "subnautica": {
+        "APIKEY": ""
+    },
+    "adminOnly": false,
+    "اوامر": {
+        "autoUnsend": true,
+        "delayUnsend": 20
+    },
     "بنك": {
         "APIKEY": "chinhdz"
+    },
+    "هلب": {
+        "autoUnsend": true,
+        "delayUnsend": 300
     },
     "تاريخ": {
         "cooldownTime": 200000000
@@ -63,12 +112,5 @@
     },
     "طقس": {
         "OPEN_WEATHER": "c4ef85b93982d6627681b056e24bd438"
-    },
-    "اوامر": {
-        "autoUnsend": true,
-        "delayUnsend": 20
-    },
-    "log": {
-        "enable": true
     }
 }
