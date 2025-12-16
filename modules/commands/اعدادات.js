@@ -1,8 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 
-/* ✅ نفس ملف التخزين المستخدم في events */
-const dataFile = path.join(__dirname, "../data/groupProtection.json");
+const dataFile = path.join(__dirname, "groupProtection.json");
 
 function loadData() {
   if (!fs.existsSync(dataFile)) fs.writeFileSync(dataFile, "{}");
@@ -19,7 +18,7 @@ function saveData(data) {
 
 module.exports.config = {
   name: "اعدادات",
-  version: "1.0.7",
+  version: "2.0.0",
   hasPermssion: 1,
   credits: "مطور",
   description: "إعدادات حماية المجموعة",
@@ -31,25 +30,28 @@ module.exports.config = {
 module.exports.run = async function ({ api, event }) {
   const { threadID, messageID, senderID } = event;
 
+  // 🔐 أدمن المجموعة فقط
   try {
-    const threadInfo = await api.getThreadInfo(threadID);
-    const admins = threadInfo.adminIDs.map(a => a.id);
-    if (!admins.includes(senderID)) return;
+    const info = await api.getThreadInfo(threadID);
+    if (!info.adminIDs.map(e => e.id).includes(senderID)) return;
   } catch {
     return;
   }
 
   const data = loadData();
+
   if (!data[threadID]) {
     data[threadID] = {
-      name: "",
-      image: "",
-      nicknames: {},
-      antiNickname: false,
+      antiSpam: false,
       antiLeave: false,
       antiName: false,
       antiImage: false,
-      notifyEvents: false
+      antiNickname: false,
+      notify: false,
+
+      name: "",
+      image: "",
+      nicknames: {}
     };
     saveData(data);
   }
@@ -57,14 +59,17 @@ module.exports.run = async function ({ api, event }) {
   const s = data[threadID];
 
   const msg = `
-1. حماية اسم المجموعة        ${s.antiName ? "[✅]" : "[❌]"}
-2. حماية صورة المجموعة       ${s.antiImage ? "[✅]" : "[❌]"}
-3. مكافحة تغير الكنيات       ${s.antiNickname ? "[✅]" : "[❌]"}
-4. مكافحة الخروج            ${s.antiLeave ? "[✅]" : "[❌]"}
-5. إخطار أحداث المجموعة     ${s.notifyEvents ? "[✅]" : "[❌]"}
+⌈ اعـدادات الـمـجـموعـة ⌋
 
-📌 قم بالرد بالأرقام مع مسافة.
-📌 بعد الاختيار تفاعل ب 👍 للحفظ.
+1. [${s.antiSpam ? "✅" : "❌"}] مكافحة الازعاج
+2. [${s.antiLeave ? "✅" : "❌"}] مكافحة الخروج
+3. [${s.antiName ? "✅" : "❌"}] مكافحة تغيير اسم المجموعة
+4. [${s.antiImage ? "✅" : "❌"}] مكافحة تغيير صورة المجموعة
+5. [${s.antiNickname ? "✅" : "❌"}] مكافحة تغيير الكنية
+
+6. [${s.notify ? "✅" : "❌"}] اخطار احداث المجموعة
+
+⇒ رد بأرقام لاختيار الإعداد الذي تريد تغييره
 `;
 
   api.sendMessage(msg, threadID, (err, info) => {
@@ -72,90 +77,78 @@ module.exports.run = async function ({ api, event }) {
       global.client.handleReply.push({
         name: module.exports.config.name,
         author: senderID,
-        messageID: info.messageID,
-        type: "settings"
+        messageID: info.messageID
       });
     }
   }, messageID);
 };
 
 module.exports.handleReply = async function ({ api, event, handleReply }) {
-  const { threadID, messageID, senderID, body } = event;
+  const { threadID, senderID, body } = event;
   if (senderID !== handleReply.author) return;
 
-  const choices = body.trim().split(/\s+/).map(Number).filter(x => [1,2,3,4,5].includes(x));
-  if (!choices.length) return;
-
   const data = loadData();
-  const threadInfo = await api.getThreadInfo(threadID);
+  const s = data[threadID];
+  if (!s) return;
 
-  for (let choice of choices) {
-    switch (choice) {
+  const nums = body.split(/\s+/).map(n => parseInt(n)).filter(n => n >= 1 && n <= 6);
+  if (!nums.length) return;
 
-      case 1:
-        data[threadID].antiName = !data[threadID].antiName;
-        if (data[threadID].antiName) data[threadID].name = threadInfo.name;
-        break;
+  const info = await api.getThreadInfo(threadID);
 
-      case 2:
-        data[threadID].antiImage = !data[threadID].antiImage;
-        if (data[threadID].antiImage) {
-          const imgPath = path.join(__dirname, "../data/images", `${threadID}.jpg`);
-          try {
-            const stream = await api.getThreadPicture(threadID);
-            const fd = fs.createWriteStream(imgPath);
-            stream.pipe(fd);
-            data[threadID].image = imgPath;
-          } catch {}
-        }
-        break;
-
-      case 3:
-        data[threadID].antiNickname = !data[threadID].antiNickname;
-        if (data[threadID].antiNickname)
-          data[threadID].nicknames = threadInfo.nicknames || {};
-        break;
-
-      case 4:
-        data[threadID].antiLeave = !data[threadID].antiLeave;
-        break;
-
-      case 5:
-        data[threadID].notifyEvents = !data[threadID].notifyEvents;
-        break;
+  for (const n of nums) {
+    if (n === 1) s.antiSpam = !s.antiSpam;
+    if (n === 2) s.antiLeave = !s.antiLeave;
+    if (n === 3) {
+      s.antiName = !s.antiName;
+      if (s.antiName) s.name = info.threadName;
     }
+    if (n === 4) {
+      s.antiImage = !s.antiImage;
+      if (s.antiImage) s.image = info.imageSrc;
+    }
+    if (n === 5) {
+      s.antiNickname = !s.antiNickname;
+      if (s.antiNickname) s.nicknames = info.nicknames || {};
+    }
+    if (n === 6) s.notify = !s.notify;
   }
 
   saveData(data);
 
-  const s = data[threadID];
-  const msg = `
-1. حماية اسم المجموعة        ${s.antiName ? "[✅]" : "[❌]"}
-2. حماية صورة المجموعة       ${s.antiImage ? "[✅]" : "[❌]"}
-3. مكافحة تغير الكنيات       ${s.antiNickname ? "[✅]" : "[❌]"}
-4. مكافحة الخروج            ${s.antiLeave ? "[✅]" : "[❌]"}
-5. إخطار أحداث المجموعة     ${s.notifyEvents ? "[✅]" : "[❌]"}
-
-👍 تفاعل للحفظ.
-`;
-
-  api.sendMessage(msg, threadID, (err, info) => {
-    global.client.handleReaction.push({
-      name: module.exports.config.name,
-      author: senderID,
-      messageID: info.messageID,
-      data
-    });
-  }, messageID);
+  // إعادة إرسال القائمة بعد التعديل
+  return module.exports.run({ api, event });
 };
 
-module.exports.handleReaction = async function ({ api, event, handleReaction }) {
-  if (event.userID !== handleReaction.author) return;
-  if (event.reaction !== "👍") return;
 
-  saveData(handleReaction.data);
-  api.sendMessage("✔️ تم حفظ الإعدادات بنجاح.", event.threadID);
+/// ==================
+/// 🔒 الحمايات الفعلية
+/// ==================
+
+module.exports.handleEvent = async function ({ api, event }) {
+  const data = loadData();
+  const d = data[event.threadID];
+  if (!d) return;
+
+  // تغيير اسم القروب
+  if (event.logMessageType === "log:thread-name" && d.antiName) {
+    await api.setTitle(d.name, event.threadID);
+    api.sendMessage("افطر انا قاعد م بخليك تلعب 🐸☝🏿", event.threadID);
+  }
+
+  // تغيير صورة القروب
+  if (event.logMessageType === "log:thread-image" && d.antiImage && d.image) {
+    await api.changeGroupImage(d.image, event.threadID);
+    api.sendMessage("افطر انا قاعد م بخليك تلعب 🐸☝🏿", event.threadID);
+  }
+
+  // تغيير الكنية
+  if (event.logMessageType === "log:user-nickname" && d.antiNickname) {
+    const { participant_id, nickname } = event.logMessageData;
+    const oldNick = d.nicknames[participant_id];
+    if (oldNick && oldNick !== nickname) {
+      await api.changeNickname(oldNick, event.threadID, participant_id);
+      api.sendMessage("افطر انا قاعد م بخليك تلعب 🐸☝🏿", event.threadID);
+    }
+  }
 };
-
-/* ⚠️ دوال الأحداث تُركت بدون حذف لكن لم تعد مستخدمة
-   الأحداث الآن تُدار من events/groupProtection.js */
