@@ -1,39 +1,49 @@
 module.exports.config = {
   name: "ابتايم",
-  version: "1.0",
+  version: "1.0.0",
   hasPermssion: 0,
-  credits: "محمد إدريس",
-  description: "يعرض مدة تشغيل البوت وعدد المجموعات وحالة البوت بشكل مزخرف وأنيق",
-  commandCategory: "خدمات",
+  credits: "Mustapha",
+  description: "عرض وقت تشغيل البوت",
+  commandCategory: "النظام",
   usages: "ابتايم",
-  cooldowns: 5
+  cooldowns: 3
 };
 
-module.exports.run = async function({ api, event }) {
-  const os = require('os');
+module.exports.run = async function ({ api, event, Users }) {
+  const moment = require("moment-timezone");
 
-  // 🕐 مدة التشغيل
   const uptime = process.uptime();
   const hours = Math.floor(uptime / 3600);
   const minutes = Math.floor((uptime % 3600) / 60);
   const seconds = Math.floor(uptime % 60);
 
-  // 🗂️ عدد المجموعات
-  const threadCount = Object.keys(await api.getThreadList(100, null, [])).length;
+  const threads = await api.getThreadList(100, null, ["INBOX"]);
+  const groupCount = threads.filter(t => t.isGroup).length;
 
-  // ⚙️ حالة البوت
-  const botStatus = "متصل ✅"; // يمكنك تغييره إلى أي حالة تريد، مثل "في وضع عدم الإزعاج"
+  const allUsers = await Users.getAll();
+  const userCount = allUsers.length;
 
-  // ✨ الاستايل الجديد
-  const serverData = `
-╭─❖ ⌜ 𝐔𝐏 ⌛𝐓𝐢𝐦𝐞 ⌟ ❖─╮
-│
-│ 🕰️ • المدة: ${hours} ساعة ${minutes} دقيقة ${seconds} ثانية
-│ 👥 • عدد المجموعات: ${threadCount}
-│ ⚙️ • الحالة: ${botStatus}
-│
-╰─❖ 𝐁𝐨𝐭 𝐒𝐲𝐬𝐭𝐞𝐦 ❖─╯
+  const currentTime = moment
+    .tz("Africa/Algiers")
+    .format("YYYY-MM-DD | HH:mm:ss");
+
+  const message = `
+╭─「 🤖 Bot Uptime 」─╮
+
+⏳ Runtime
+• ${hours}h ${minutes}m ${seconds}s
+
+👥 Groups
+• ${groupCount}
+
+👤 Users
+• ${userCount}
+
+🕒 Time
+• ${currentTime}
+
+╰──────────────╯
 `;
 
-  return api.sendMessage(serverData, event.threadID);
+  api.sendMessage(message, event.threadID, event.messageID);
 };
