@@ -16,7 +16,7 @@ module.exports.config = {
 module.exports.run = async function ({ api, event, args }) {
 
   // ID المطور
-  const DEV_ID = "61570782968645";
+  const DEV_ID = "61581906898524";
 
   // حماية المطور فقط
   if (event.senderID !== DEV_ID) return;
