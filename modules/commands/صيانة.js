@@ -1,72 +1,49 @@
-// ⚙️ نظام الصيانة — ملف واحد فقط
-const fs = require("fs");
-const path = __dirname + "/maintenance.json";
-
-// --- إنشاء ملف الصيانة لو غير موجود ---
-if (!fs.existsSync(path)) {
-    fs.writeFileSync(path, JSON.stringify({
-        enable: false,
-        developer: "61570782968645"
-    }, null, 2));
-}
-
 module.exports.config = {
-    name: "صيانة",
-    version: "2.0.0",
-    hasPermssion: 2, // فقط المطور
-    credits: "GPT + محمد إدريس",
-    description: "تشغيل أو إيقاف وضع الصيانة",
-    commandCategory: "النظام",
-    usages: "[on/off]",
-    cooldowns: 5
+  name: "صيانة",
+  version: "1.0.5",
+  hasPermssion: 2, // خاص بالمطور فقط
+  credits: "Gemini",
+  description: "تفعيل أو تعطيل وضع الصيانة (إيقاف البوت عن الجميع)",
+  commandCategory: "المطور",
+  usages: "[on/off]",
+  cooldowns: 5
 };
 
-// --- الفحص الرئيسي قبل أي أمر ---
-module.exports.handleEvent = function ({ event }) {
-    try {
-        const data = JSON.parse(fs.readFileSync(path));
+module.exports.run = async function({ api, event, args }) {
+  const { threadID, messageID } = event;
+  const adminID = "61581906898524"; // الأيدي الخاص بك لضمان الحماية
 
-        // إذا الصيانة غير مفعلة → لا تعمل شيء
-        if (!data.enable) return;
+  // التحقق من أن المطور هو من يرسل الأمر للأمان الإضافي
+  if (event.senderID !== adminID) {
+    return api.sendMessage("⚠️ عذراً، هذا الأمر مخصص لمطور البوت الأساسي فقط.", threadID, messageID);
+  }
 
-        // السماح فقط للمطور
-        if (String(event.senderID) !== data.developer) {
-            // تجاهل أي رسالة من أي شخص آخر في أي مجموعة
-            return true; // إيقاف أي تنفيذ للأوامر الأخرى
-        }
+  // إذا لم يتم إدخال وسيط (on أو off)
+  if (!args[0]) {
+    return api.sendMessage("⚠️ يرجى تحديد الحالة:\n• صيانة on (لتفعيل وضع الصيانة)\n• صيانة off (لإيقاف وضع الصيانة)", threadID, messageID);
+  }
 
-    } catch (e) {
-        console.error("Maintenance error:", e);
-    }
-};
+  if (args[0].toLowerCase() === "on") {
+    global.config.maintenanceMode = true;
+    const msg = 
+      "🚧 ━━━ وضـع الـصـيـانـة ━━━ 🚧\n\n" +
+      "🔴 الحالة: تـم التـفـعـيـل\n" +
+      "📢 النتيجة: البوت سيتجاهل الجميع الآن\n" +
+      "👤 المطور: متاح لك فقط التحكم\n\n" +
+      "━━━━━━━━━━━━━━━\n" +
+      "📡 نظام الحماية يعمل حالياً";
+    return api.sendMessage(msg, threadID, messageID);
+  } 
 
-// --- أمر تشغيل/إيقاف الصيانة ---
-module.exports.run = async ({ api, event, args }) => {
-    try {
-        const data = JSON.parse(fs.readFileSync(path));
-
-        // السماح للمطور فقط
-        if (String(event.senderID) !== data.developer)
-            return api.sendMessage("❌ هذا الأمر خاص بالمطور فقط.", event.threadID, event.messageID);
-
-        const action = args[0];
-
-        if (action === "on") {
-            data.enable = true;
-            fs.writeFileSync(path, JSON.stringify(data, null, 2));
-            return api.sendMessage("🔧✨ تم تفعيل وضع الصيانة.\nالبوت الآن يستجيب للمطور فقط.", event.threadID);
-        }
-
-        if (action === "off") {
-            data.enable = false;
-            fs.writeFileSync(path, JSON.stringify(data, null, 2));
-            return api.sendMessage("☑️ تم إلغاء وضع الصيانة.\nعاد البوت للعمل الطبيعي.", event.threadID);
-        }
-
-        return api.sendMessage("استخدم:\nصيانة on\nصيانة off", event.threadID);
-
-    } catch (e) {
-        console.error(e);
-        api.sendMessage("❌ حدث خطأ أثناء تشغيل أمر الصيانة.", event.threadID);
-    }
+  if (args[0].toLowerCase() === "off") {
+    global.config.maintenanceMode = false;
+    const msg = 
+      "✅ ━━━ وضـع الـصـيـانـة ━━━ ✅\n\n" +
+      "🟢 الحالة: تـم الإيقـاف\n" +
+      "📢 النتيجة: البوت متاح الآن لجميع الأعضاء\n" +
+      "🌍 النطاق: جميع المجموعات والخاص\n\n" +
+      "━━━━━━━━━━━━━━━\n" +
+      "📡 عودة العمل بشكل طبيعي";
+    return api.sendMessage(msg, threadID, messageID);
+  }
 };
