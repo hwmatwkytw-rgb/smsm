@@ -1,9 +1,9 @@
 module.exports.config = {
   name: "اوامر",
-  version: "1.1.0",
+  version: "1.2.0",
   hasPermssion: 0,
   credits: "ᎠᎯᎢᎬ ᏚᎮᎯᏒᎠᎯ",
-  description: "قائمة الأوامر مقسمة لصفحات مع إخفاء أوامر المطور",
+  description: "قائمة الأوامر صفحتين فقط مع فلترة الكلمات البذيئة",
   commandCategory: "نظام",
   usages: "[رقم الصفحة]",
   cooldowns: 5,
@@ -29,12 +29,19 @@ module.exports.run = async function({ api, event, args, getText }) {
 
   const image = (await axios.get("https://i.ibb.co/Vcsqzf4T/22ed4e077eadba33e9b9f78a64317ab9.jpg", { responseType: "stream" })).data;
 
-  const command = commands.get((args[0] || "").toLowerCase());
+  // قائمة الكلمات المحظورة (الأوامر البذيئة)
+  const blacklistedWords = ["قحبة", "زب", "كس", "منيوك"]; 
+
+  const commandArg = (args[0] || "").toLowerCase();
+  const command = commands.get(commandArg);
   const threadSetting = global.data.threadData.get(parseInt(threadID)) || {};
   const prefix = threadSetting.PREFIX || global.config.PREFIX;
 
-  // إذا طلب المستخدم تفاصيل أمر معين
   if (command) {
+    // منع عرض تفاصيل الأوامر البذيئة حتى لو تم كتابة اسمها
+    if (blacklistedWords.some(word => command.config.name.includes(word))) {
+        return api.sendMessage("⚠️ هذا الأمر غير متوفر أو تم حظره.", threadID, messageID);
+    }
     return api.sendMessage(
       getText(
         "moduleInfo",
@@ -43,11 +50,7 @@ module.exports.run = async function({ api, event, args, getText }) {
         `${prefix}${command.config.name} ${(command.config.usages) ? command.config.usages : ""}`,
         command.config.commandCategory,
         command.config.cooldowns,
-        (command.config.hasPermssion == 0)
-          ? getText("user")
-          : (command.config.hasPermssion == 1)
-          ? getText("adminGroup")
-          : getText("adminBot"),
+        (command.config.hasPermssion == 0) ? getText("user") : (command.config.hasPermssion == 1) ? getText("adminGroup") : getText("adminBot"),
         command.config.credits
       ),
       threadID,
@@ -55,16 +58,19 @@ module.exports.run = async function({ api, event, args, getText }) {
     );
   }
 
-  // تجميع الفئات والأوامر مع إخفاء أوامر المطور (hasPermssion >= 2)
   const categories = {};
   for (let [name, value] of commands) {
-    if (value.config.hasPermssion >= 2) continue; // إخفاء أوامر المطور
+    // 1. إخفاء أوامر المطور (صلاحية 2 فأكثر)
+    if (value.config.hasPermssion >= 2) continue;
+    
+    // 2. فلترة الأوامر البذيئة
+    if (blacklistedWords.some(word => name.includes(word))) continue;
+
     const cat = value.config.commandCategory || "عام";
     if (!categories[cat]) categories[cat] = [];
     categories[cat].push(name);
   }
 
-  // ترتيب الفئات أبجدياً
   const sortedCategories = Object.keys(categories).sort();
   let blocks = [];
 
@@ -76,15 +82,15 @@ module.exports.run = async function({ api, event, args, getText }) {
     blocks.push(block);
   }
 
-  // تقسيم الكود لصفحتين (كل صفحة 5 فئات)
-  const limitPerPage = 5;
-  const totalPages = Math.ceil(blocks.length / limitPerPage);
+  // إجبار النظام على صفحتين فقط
+  const totalPages = 2;
+  const itemsPerPage = Math.ceil(blocks.length / totalPages); // تقسيم الفئات على 2 بالتساوي
+  
   let page = parseInt(args[0]) || 1;
-
   if (page < 1 || page > totalPages) page = 1;
 
-  const start = (page - 1) * limitPerPage;
-  const finalBlocks = blocks.slice(start, start + limitPerPage).join("\n\n");
+  const start = (page - 1) * itemsPerPage;
+  const finalBlocks = blocks.slice(start, start + itemsPerPage).join("\n\n");
 
   const msg = `─⇄〖 ⤹   𝗞𝗔𝗜𝗥𝗢𝗦 𝗕𝗢𝗧 ⇊ 〗⇄─╮\n\n${finalBlocks}\n\n📌 المجموع: [ ${commands.size} ] أمر\n💡 استخدم ${prefix}اوامر [اسم الأمر]\n👑 المطور: ᎠᎯᎢᎬ ᏚᎮᎯᏒᎠᎯ\n\n📖 الصفحة [ ${page} / ${totalPages} ]\n╰───────────╯`;
 
