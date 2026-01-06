@@ -3,7 +3,7 @@ module.exports.config = {
   version: "1.0.0",
   hasPermssion: 0,
   credits: "Mustapha",
-  description: "عرض وقت تشغيل البوت",
+  description: "عرض إحصائيات النظام",
   commandCategory: "النظام",
   usages: "ابتايم",
   cooldowns: 3
@@ -19,30 +19,24 @@ module.exports.run = async function ({ api, event, Users }) {
 
   const threads = await api.getThreadList(100, null, ["INBOX"]);
   const groupCount = threads.filter(t => t.isGroup).length;
-
   const allUsers = await Users.getAll();
   const userCount = allUsers.length;
 
-  const currentTime = moment
-    .tz("Africa/Algiers")
-    .format("YYYY-MM-DD | HH:mm:ss");
+  const currentTime = moment.tz("Africa/Algiers").format("HH:mm:ss");
+  const currentDate = moment.tz("Africa/Algiers").format("DD/MM/YYYY");
 
   const message = `
-╭─「 🤖 Bot Uptime 」─╮
+⦿──────────────⦿
+    ✦ نـشـاط الـنـظـام ✦
+⦿──────────────⦿
 
-⏳ Runtime
-• ${hours}h ${minutes}m ${seconds}s
+● الـتـشـغـيـل » ${hours}h:${minutes}m:${seconds}s
+● الـمـجـموعات » ${groupCount}
+● الـمـسـتخدمين » ${userCount}
+● الـتـوقـيـت » ${currentTime}
+● الـتـاريـخ » ${currentDate}
 
-👥 Groups
-• ${groupCount}
-
-👤 Users
-• ${userCount}
-
-🕒 Time
-• ${currentTime}
-
-╰──────────────╯
+⦿──────────────⦿
 `;
 
   api.sendMessage(message, event.threadID, event.messageID);
