@@ -3,24 +3,24 @@ const path = require("path");
 const { exec } = require("child_process");
 
 module.exports.config = {
-  name: "لوحة", // الاسم الجديد للأمر
-  version: "4.0.0",
+  name: "لوحة",
+  version: "4.5.0",
   hasPermssion: 2,
   credits: "ᎠᎯᎢᎬ ᏚᎮᎯᏒᎠᎯ",
-  description: "لوحة تحكم متكاملة للملفات والنظام",
+  description: "لوحة تحكم احترافية للملفات والأوامر",
   commandCategory: "المطور",
-  usages: "[رقم / مسار]",
+  usages: "[تصفح / رفع / تعديل / امر]",
   cooldowns: 0
 };
 
 module.exports.run = async function({ api, event, args }) {
-  // معرف المطور الخاص بك
-  const developerID = "61581906898524";
+  const developerID = "61581906898524"; 
   if (event.senderID !== developerID) {
-    return api.sendMessage("❌ عذراً، هذا الأمر مخصص لصاحب البوت فقط.", event.threadID, event.messageID);
+    return api.sendMessage("❌ عذراً، هذا الأمر مخصص للمطور فقط.", event.threadID, event.messageID);
   }
 
-  const rootPath = path.resolve(__dirname, '..', '..');
+  // البدء من مجلد البوت الرئيسي
+  const rootPath = process.cwd();
   return listContent(api, event, rootPath);
 };
 
@@ -28,34 +28,38 @@ async function listContent(api, event, currentPath) {
   try {
     const files = fs.readdirSync(currentPath);
     let items = [];
+    
     files.forEach(file => {
-      const filePath = path.join(currentPath, file);
-      const stat = fs.statSync(filePath);
-      items.push({ name: file, path: filePath, isDir: stat.isDirectory() });
+      try {
+        const filePath = path.join(currentPath, file);
+        const stat = fs.statSync(filePath);
+        items.push({ name: file, path: filePath, isDir: stat.isDirectory() });
+      } catch (e) { /* تجاهل الملفات المحمية */ }
     });
 
     items.sort((a, b) => (b.isDir - a.isDir));
 
-    let msg = `┏━━━━━━━┓\n┃ ⚡ 𝗗𝗘𝗩 𝗣𝗔𝗡𝗘𝗟 ⚡\n┗━━━━━━━┛\n\n`;
-    msg += `📂 المسار الحالي:\n» ${path.relative(process.cwd(), currentPath) || "الرئيسي"}\n\n`;
+    let msg = `🛠️ [ 𝗗𝗘𝗩 𝗣𝗔𝗡𝗘𝗟 - 𝗩𝟰.𝟱 ]\n`;
+    msg += `📂 المسار: /${path.relative(process.cwd(), currentPath) || "الرئيسي"}\n`;
+    msg += `━━━━━━━━━━━━━━━\n`;
 
     items.forEach((item, index) => {
       msg += `${index + 1}. ${item.isDir ? "📁" : "📄"} ${item.name}\n`;
     });
 
-    msg += `\n━━━━━━━━━━━━━━\n`;
-    msg += `🎮 [التحكم بالرد]:\n`;
-    msg += `• [الرقم] ← فتح مجلد\n`;
-    msg += `• عرض [الرقم] ← قراءة كود\n`;
-    msg += `• تعديل [الرقم] ← استبدال كود\n`;
+    msg += `━━━━━━━━━━━━━━━\n`;
+    msg += `💡 [طريقة الاستخدام]:\n`;
+    msg += `• [الرقم] ← دخول مجلد\n`;
+    msg += `• عرض [الرقم] ← قراءة ملف\n`;
+    msg += `• تعديل [الرقم] ← استبدال محتوى\n`;
     msg += `• رفع [الاسم.js] ← ملف جديد\n`;
-    msg += `• حذف [الرقم] ← مسح\n`;
-    msg += `• امر [الأمر] ← Terminal\n`;
-    msg += `━━━━━━━━━━━━━━`;
+    msg += `• حذف [الرقم] ← إزالة\n`;
+    msg += `• امر [Command] ← تنفيذ Terminal\n`;
+    msg += `• رجوع ← المجلد السابق\n`;
 
     return api.sendMessage(msg, event.threadID, (err, info) => {
       global.client.handleReply.push({
-        name: "لوحة",
+        name: this.config.name,
         messageID: info.messageID,
         author: event.senderID,
         items: items,
@@ -63,7 +67,7 @@ async function listContent(api, event, currentPath) {
       });
     }, event.messageID);
   } catch (e) {
-    return api.sendMessage("❌ خطأ: " + e.message, event.threadID);
+    return api.sendMessage("❌ خطأ في الوصول: " + e.message, event.threadID);
   }
 }
 
@@ -71,85 +75,126 @@ module.exports.handleReply = async function({ api, event, handleReply }) {
   const { threadID, messageID, body, senderID } = event;
   if (senderID != handleReply.author) return;
 
-  const input = body.split(" ");
+  const input = body.trim().split(/\s+/);
   const action = input[0].toLowerCase();
 
+  // --- [ 1. تنفيذ أوامر Terminal ] ---
   if (action === "امر") {
-    exec(body.slice(4), (error, stdout, stderr) => {
+    const command = body.slice(4).trim();
+    if (!command) return api.sendMessage("⚠️ اكتب الأمر المراد تنفيذه.", threadID, messageID);
+    
+    // التنفيذ في المسار الحالي الذي يتصفحه المطور
+    exec(command, { cwd: handleReply.currentPath }, (error, stdout, stderr) => {
       if (error) return api.sendMessage(`❌ خطأ:\n${error.message}`, threadID, messageID);
-      api.sendMessage(`✅ النتيجة:\n${stdout || stderr}`, threadID, messageID);
+      const output = stdout || stderr || "✅ تم التنفيذ بنجاح (بدون مخرجات).";
+      api.sendMessage(`💻 المخرجات:\n\n${output}`, threadID, messageID);
     });
     return;
   }
 
+  // --- [ 2. رفع ملف جديد ] ---
   if (action === "رفع") {
     const fileName = input[1];
     const content = body.split("\n").slice(1).join("\n");
-    if (!fileName || !content) return api.sendMessage("⚠️ تنبيه: اكتب (رفع اسم.js) ثم سطر جديد والكود.", threadID, messageID);
+    if (!fileName) return api.sendMessage("⚠️ استخدم: رفع [اسم_الملف]\nثم ضع الكود في سطر جديد.", threadID, messageID);
     
-    return api.sendMessage(`📥 اختر رقم المجلد لحفظ ( ${fileName} ) بداخله:`, threadID, (err, info) => {
+    let folderMsg = `📥 حدد رقم المجلد الذي تريد حفظ "${fileName}" بداخله:\n\n`;
+    const foldersOnly = handleReply.items.filter(i => i.isDir);
+    
+    // إضافة خيار "هنا" لحفظه في المسار الحالي
+    folderMsg += `0. 📍 [المجلد الحالي]\n`;
+    foldersOnly.forEach((f, i) => folderMsg += `${i + 1}. 📁 ${f.name}\n`);
+
+    return api.sendMessage(folderMsg, threadID, (err, info) => {
       global.client.handleReply.push({
-        name: "لوحة",
+        name: this.config.name,
         messageID: info.messageID,
         author: senderID,
-        job: "CHOOSE_FOLDER",
+        job: "SAVE_FILE_LOCATION",
         fileName: fileName,
         content: content,
-        items: handleReply.items
+        currentPath: handleReply.currentPath,
+        folders: foldersOnly
       });
     }, messageID);
   }
 
-  if (handleReply.job === "CHOOSE_FOLDER") {
-    const folder = handleReply.items[parseInt(body) - 1];
-    if (!folder || !folder.isDir) return api.sendMessage("❌ يجب اختيار رقم مجلد!", threadID, messageID);
-    fs.writeFileSync(path.join(folder.path, handleReply.fileName), handleReply.content);
-    return api.sendMessage(`✅ تم حفظ الملف في: ${folder.name}`, threadID, messageID);
-  }
+  if (handleReply.job === "SAVE_FILE_LOCATION") {
+    const choice = parseInt(body);
+    let targetPath;
 
-  if (action === "تعديل") {
-    const item = handleReply.items[parseInt(input[1]) - 1];
-    if (!item || item.isDir) return api.sendMessage("❌ اختر ملفاً صالحاً.", threadID, messageID);
-    
-    return api.sendMessage(`📝 أرسل الكود الجديد لـ: ${item.name}`, threadID, (err, info) => {
-      global.client.handleReply.push({
-        name: "لوحة",
-        messageID: info.messageID,
-        author: senderID,
-        job: "UPDATE_FILE",
-        filePath: item.path
-      });
-    }, messageID);
-  }
-
-  if (handleReply.job === "UPDATE_FILE") {
-    fs.writeFileSync(handleReply.filePath, body);
-    return api.sendMessage("✅ تم تحديث الكود بنجاح!", threadID, messageID);
-  }
-
-  const index = parseInt(input[1] || input[0]) - 1;
-  const item = handleReply.items[index];
-  if (!item) return;
-
-  if (action === "عرض") {
-    const code = fs.readFileSync(item.path, "utf-8");
-    if (code.length > 3000) {
-        const tmp = path.join(__dirname, "cache", item.name);
-        fs.ensureDirSync(path.join(__dirname, "cache"));
-        fs.writeFileSync(tmp, code);
-        return api.sendMessage({ body: `📄 الملف كبير:`, attachment: fs.createReadStream(tmp) }, threadID, () => fs.unlinkSync(tmp), messageID);
+    if (choice === 0) {
+      targetPath = path.join(handleReply.currentPath, handleReply.fileName);
+    } else {
+      const selectedFolder = handleReply.folders[choice - 1];
+      if (!selectedFolder) return api.sendMessage("❌ اختيار غير صحيح.", threadID, messageID);
+      targetPath = path.join(selectedFolder.path, handleReply.fileName);
     }
-    return api.sendMessage(`📝 كود: ${item.name}\n\n${code}`, threadID, messageID);
-  }
 
-  if (action === "حذف") {
-    fs.removeSync(item.path);
-    api.sendMessage(`🗑️ تم حذف: ${item.name}`, threadID, messageID);
+    fs.writeFileSync(targetPath, handleReply.content || "// ملف فارغ");
+    api.sendMessage(`✅ تم الرفع بنجاح في:\n${targetPath}`, threadID, messageID);
     return listContent(api, event, handleReply.currentPath);
   }
 
-  if (item.isDir && !isNaN(input[0])) {
+  // --- [ 3. تعديل ملف ] ---
+  if (action === "تعديل") {
+    const item = handleReply.items[parseInt(input[1]) - 1];
+    if (!item || item.isDir) return api.sendMessage("❌ اختر رقم ملف صالح.", threadID, messageID);
+    
+    return api.sendMessage(`📝 أرسل الكود الجديد لـ: ${item.name}\n(سيتم استبدال المحتوى بالكامل)`, threadID, (err, info) => {
+      global.client.handleReply.push({
+        name: this.config.name,
+        messageID: info.messageID,
+        author: senderID,
+        job: "UPDATE_FILE_CONTENT",
+        filePath: item.path,
+        currentPath: handleReply.currentPath
+      });
+    }, messageID);
+  }
+
+  if (handleReply.job === "UPDATE_FILE_CONTENT") {
+    fs.writeFileSync(handleReply.filePath, body);
+    api.sendMessage("✅ تم التعديل بنجاح!", threadID, messageID);
+    return listContent(api, event, handleReply.currentPath);
+  }
+
+  // --- [ 4. عرض محتوى ملف ] ---
+  if (action === "عرض") {
+    const item = handleReply.items[parseInt(input[1]) - 1];
+    if (!item || item.isDir) return api.sendMessage("❌ اختر ملفاً صالحاً.", threadID, messageID);
+    
+    const code = fs.readFileSync(item.path, "utf-8");
+    if (code.length > 3500) {
+        const tmpPath = path.join(__dirname, "cache", `view_${item.name}`);
+        fs.ensureDirSync(path.dirname(tmpPath));
+        fs.writeFileSync(tmpPath, code);
+        return api.sendMessage({ body: `📄 الملف كبير جداً، تم إرساله كملف:`, attachment: fs.createReadStream(tmpPath) }, threadID, () => fs.unlinkSync(tmpPath), messageID);
+    }
+    return api.sendMessage(`📄 محتوى: ${item.name}\n\n${code}`, threadID, messageID);
+  }
+
+  // --- [ 5. حذف ملف/مجلد ] ---
+  if (action === "حذف") {
+    const item = handleReply.items[parseInt(input[1]) - 1];
+    if (!item) return api.sendMessage("❌ رقم غير موجود.", threadID, messageID);
+    
+    fs.removeSync(item.path);
+    api.sendMessage(`🗑️ تم الحذف: ${item.name}`, threadID, messageID);
+    return listContent(api, event, handleReply.currentPath);
+  }
+
+  // --- [ 6. التنقل بين المجلدات ] ---
+  if (body.toLowerCase() === "رجوع") {
+    const parentPath = path.dirname(handleReply.currentPath);
     api.unsendMessage(handleReply.messageID);
-    return listContent(api, event, item.path);
+    return listContent(api, event, parentPath);
+  }
+
+  const index = parseInt(body) - 1;
+  const selected = handleReply.items[index];
+  if (selected && selected.isDir) {
+    api.unsendMessage(handleReply.messageID);
+    return listContent(api, event, selected.path);
   }
 };
