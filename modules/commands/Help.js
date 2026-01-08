@@ -3,7 +3,7 @@ module.exports.config = {
   version: "1.0.6",
   hasPermssion: 0,
   credits: "ᎠᎯᎢᎬ ᏚᎮᎯᏒᎠᎯ",
-  description: "قائمة الأوامر بشكل منسق وجميل",
+  description: "قائمة الأوامر بشكل منسق وحاد",
   commandCategory: "نظام",
   usages: "[رقم الصفحة]",
   cooldowns: 5,
@@ -15,8 +15,8 @@ module.exports.config = {
 
 module.exports.languages = {
   "en": {
-    "moduleInfo": "「 %1 」\n%2\n\n❯ الاستخدام: %3\n❯ الفئة: %4\n❯ وقت الانتظار: %5 ثانية\n❯ الصلاحية: %6\n\n» كود الأداة بواسطة %7 «",
-    "helpList": '[ يوجد %1 أمر في هذا البوت، استخدم: "%2اوامر اسم_الأمر" لمعرفة التفاصيل! ]',
+    "moduleInfo": "┏━━━━━━  📋  ━━━━━━┓\n\n  ▸ الاسم: %1\n  ▸ الوصف: %2\n  ▸ الاستخدام: %3\n  ▸ الفئة: %4\n  ▸ الانتظار: %5 ثانية\n  ▸ الصلاحية: %6\n\n┗━━━━━━  👑  ━━━━━━┛",
+    "helpList": '[ يوجد %1 أمر في هذا البوت ]',
     "user": "المستخدم",
     "adminGroup": "مشرف المجموعة",
     "adminBot": "مطور البوت"
@@ -38,6 +38,10 @@ module.exports.run = async function({ api, event, args, getText }) {
   if (!command) {
     const categories = {};
     for (let [name, value] of commands) {
+      if (value.config.commandCategory?.toLowerCase() === "مطور" || 
+          value.config.commandCategory === "المطور" || 
+          value.config.hasPermssion == 2) continue;
+      
       const cat = value.config.commandCategory || "عام";
       if (!categories[cat]) categories[cat] = [];
       categories[cat].push(name);
@@ -46,24 +50,37 @@ module.exports.run = async function({ api, event, args, getText }) {
     let blocks = [];
     for (let cat in categories) {
       const cmds = categories[cat].sort();
-      // الاستايل الجديد للفئة مع رمز الـ 乂
-      let block = `   乂──『 ${cat.toUpperCase()} 』──乂\n\n`;
-      block += `${cmds.join("  •  ")}\n\n`;
-      // السطر الفاصل بين كل فئة
-      block += `   ───────────────`;
+      let block = `  ┌──────────────┐\n`;
+      block += `     [ ${cat.toUpperCase()} ]\n`;
+      block += `  └──────────────┘\n`;
+      block += `   ${cmds.join("  |  ")}\n`;
       blocks.push(block);
     }
 
-    const totalPages = Math.ceil(blocks.length / 4);
+    const totalPages = 2;
+    const numPerPage = Math.ceil(blocks.length / totalPages);
     const page = parseInt(args[0]) || 1;
 
     if (page < 1 || page > totalPages)
-      return api.sendMessage(`⚠️ اختر صفحة بين 1 - ${totalPages}`, threadID, messageID);
+      return api.sendMessage(`⚠️ القائمة متوفرة في صفحتين فقط (1-2)`, threadID, messageID);
 
-    const start = (page - 1) * 4;
-    const finalBlocks = blocks.slice(start, start + 4).join("\n\n");
+    const start = (page - 1) * numPerPage;
+    const finalBlocks = blocks.slice(start, start + numPerPage).join("\n\n");
 
-    const msg = `─⇄〖 ⤹   𝗞𝗔𝗜𝗥𝗢𝗦 𝗕𝗢𝗧 ⇊ 〗⇄─╮\n\n${finalBlocks}\n\n📌 المجموع: [ ${commands.size} ] أمر\n💡 استخدم ${prefix}اوامر [اسم الأمر] للتفاصيل.\n\n👑 المطور: ᎠᎯᎢᎬ ᏚᎮᎯᏒᎠᎯ\n${page === 1 ? "🍂 اللهم صلِّ وسلم على نبينا محمد ﷺ" : ""}\n╰───────────╯`;
+    const msg = 
+`┎━━━━━━━━━━━━━━━━━┒
+    𝗞𝗔𝗜𝗥𝗢𝗦 𝗦𝗬𝗦𝗧𝗘𝗠 𝗠𝗘𝗡𝗨
+┖━━━━━━━━━━━━━━━━━┚
+
+${finalBlocks}
+
+  ■ إجمالي الأوامر : [ ${commands.size} ]
+  ■ رقم الصفحة    : [ ${page} / ${totalPages} ]
+  ■ المطور        : ᎠᎯᎢᎬ ᏚᎮᎯᏒᎠᎯ
+
+┎━━━━━━━━━━━━━━━━━┒
+    ${page === 1 ? "اللهم صلِّ وسلم على نبينا محمد ﷺ" : "اكتب " + prefix + "اوامر [اسم الأمر] للتفاصيل"}
+┖━━━━━━━━━━━━━━━━━┚`;
 
     return api.sendMessage(
       { body: msg, attachment: image },
