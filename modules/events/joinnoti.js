@@ -3,7 +3,7 @@ module.exports.config = {
   eventType: ["log:subscribe"],
   version: "1.0.1",
   credits: "Mirai Team | تعديل: ᎠᎯᏁᎢᎬ  ᏚᎮᎯᏒᎠᎯ",
-  description: "إشعار انضمام البوت أو عضو",
+  description: "إشعار انضمام البوت أو عضو باستايل هندسي أنيق",
   dependencies: {
     "fs-extra": "",
     "moment-timezone": ""
@@ -13,7 +13,7 @@ module.exports.config = {
 module.exports.run = async function({ api, event, Users }) {
   const { threadID } = event;
 
-  // ====== 🟦 انضمام البوت ======
+  // ====== 🟦 انضمام البوت (الستايل الهندسي الحديث) ======
   if (event.logMessageData.addedParticipants.some(i => i.userFbId == api.getCurrentUserID())) {
 
     api.changeNickname(
@@ -23,27 +23,27 @@ module.exports.run = async function({ api, event, Users }) {
     );
 
     const botMsg =
-`╭─▸💠  تم تفعيل البوت بنجاح  💠◂─╮
-│
-│ ➤ اسم البوت  : ${global.config.BOTNAME || "KYROS BOT"}
-│ ➤ الإصدار     : 〘3.7.0〙
-│ ➤ عدد الأوامر : 〘${global.client.commands.size}〙
-│ ➤ البادئة     : 〘 / 〙
-│ ➤ المطور      : ᎠᎯᏁᎢᎬ  ᏚᎮᎯᏒᎠᎯ
-│
-│ ✦ استمتع باستخدام البوت وتأكد من استكشاف جميع الأوامر!
-╰─────────────────────`;
+`╭•━━━━━━━  💠  ━━━━━━━•╮
+    KYROS SYSTEM ACTIVATED
+╰•━━━━━━━  💠  ━━━━━━━•╯
+  ⦿ اسـم الـبـوت ⌁ ${global.config.BOTNAME || "KYROS BOT"}
+  ⦿ نـسـخـة الـنـظـام ⌁ v3.7.0
+  ⦿ مـكـتـبـة الأوامـر ⌁ [ ${global.client.commands.size} ]
+  ⦿ مـفـتـاح الـتـشـغـيـل ⌁ [ / ]
+  ⦿ مـبـرمـج الـكـود ⌁ ᎠᎯᏁᎢᎬ  ᏚᎮᎯᏒᎠᎯ
+╭•━━━━━━━━━━━━━━━━━•╮
+    اسـتـخـدم /help لـلـمـسـاعـدة
+╰•━━━━━━━━━━━━━━━━━•╯`;
 
     return api.sendMessage(botMsg, threadID);
   }
 
-  // ====== 🟨 انضمام عضو ======
+  // ====== 🟨 انضمام عضو (الستايل الهندسي مع الدعاء) ======
   try {
     const { threadName, participantIDs } = await api.getThreadInfo(threadID);
 
     const nameArray = [];
     const mentions = [];
-    let i = 0;
 
     for (const user of event.logMessageData.addedParticipants) {
       const id = user.userFbId;
@@ -57,7 +57,6 @@ module.exports.run = async function({ api, event, Users }) {
         global.data.userName.set(id, userName);
         global.data.allUserID.push(id);
       }
-      i++;
     }
 
     const authorData = await Users.getData(event.author);
@@ -69,14 +68,17 @@ module.exports.run = async function({ api, event, Users }) {
     const memberCount = participantIDs.length;
 
     const msg =
-`◇───✧ ◈ ✧───◇
-❏ أهلاً بك | ${nameArray.join(", ")}
-❏ انضممت الآن إلى | ${threadName}
-❏ تمت إضافتك بواسطة | ${adderName}
-❏ ترتيبك بيننا | ${memberCount}
-❏ وقت الانضمام | ${time}
-❏ 🤲 بارك الله لك في هذه المجموعة وجعلها مليئة بالخيرات
-◇───✧ ◈ ✧───◇`;
+`⌬─────────────⌬
+  ✨ أنـرت بـقـدومـك الـمـبـارك ✨
+⌬─────────────⌬
+  ⪼ الـمـنـضـم ⌭ ${nameArray.join(", ")}
+  ⪼ الـمـجـمـوعـة ⌭ ${threadName}
+  ⪼ الـمُـضـيـف ⌭ ${adderName}
+  ⪼ عـددنـا الآن ⌭ ( ${memberCount} )
+  ⪼ الـتـوقـيـت ⌭ ${time}
+⌬─────────────⌬
+  🤲🏻 بـارك الـلّٰـه لـك فـي هـذا الـجـروب 
+  وجـعـلـه شـاهـداً لـنـا لا عـلـيـنـا. ✨`;
 
     return api.sendMessage({ body: msg, mentions }, threadID);
 
