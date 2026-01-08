@@ -4,13 +4,13 @@ const path = require("path");
 
 module.exports.config = {
     name: "تحميل",
-    version: "3.0.0",
+    version: "3.1.0",
     hasPermssion: 0,
     credits: "Kiro & Gemini AI",
-    description: "تحميل فيديوهات من (TikTok, YouTube, FB, IG) برابط واحد مباشر",
+    description: "تحميل من TikTok, YouTube, FB, IG مع تحديد نوع المنصة",
     commandCategory: "الخدمات",
     usages: "[رابط الفيديو]",
-    cooldowns: 15 // زيادة الكول داون لمنع حظر البوت
+    cooldowns: 10
 };
 
 module.exports.run = async ({ api, event, args }) => {
@@ -18,61 +18,71 @@ module.exports.run = async ({ api, event, args }) => {
     const url = args[0];
 
     if (!url) {
-        return api.sendMessage("⚠️ يرجى وضع رابط الفيديو المراد تحميله.\nمثال: تحميل https://vt.tiktok.com/xxx/", threadID, messageID);
+        return api.sendMessage("⚠️ يرجى وضع رابط الفيديو.\nمثال: تحميل https://vt.tiktok.com/xxx/", threadID, messageID);
     }
 
-    // التحقق من صحة الرابط لتقليل الأخطاء قبل الإرسال للسيرفر
-    if (!url.includes("http")) {
-        return api.sendMessage("❌ الرابط غير صالح، يرجى التأكد من نسخ الرابط بالكامل.", threadID, messageID);
-    }
+    // تحديد نوع المنصة بشكل يدوي للرسالة
+    let platform = "غير معروفة";
+    if (url.includes("tiktok")) platform = "تيك توك (TikTok) 📱";
+    else if (url.includes("facebook") || url.includes("fb.watch")) platform = "فيسبوك (Facebook) 💙";
+    else if (url.includes("instagram") || url.includes("instagr.am")) platform = "إنستغرام (Instagram) 📸";
+    else if (url.includes("youtube") || url.includes("youtu.be")) platform = "يوتيوب (YouTube) ❤️";
 
-    api.sendMessage("⏳ جاري فحص الرابط ومعالجة الفيديو... يرجى الانتظار.", threadID, (err, info) => {
-        // حذف رسالة الانتظار بعد 15 ثانية تلقائياً
-        setTimeout(() => { api.unsendMessage(info.messageID) }, 15000);
+    api.sendMessage(`⏳ جاري معالجة الرابط من [ ${platform} ]... يرجى الانتظار.`, threadID, (err, info) => {
+        setTimeout(() => { api.unsendMessage(info.messageID) }, 10000);
     }, messageID);
 
     try {
-        // استخدام محرك تحميل شامل يدعم عدة منصات
-        const res = await axios.get(`https://api.vreden.my.id/api/download?url=${encodeURIComponent(url)}`);
+        // استخدام API بديل وأكثر استقراراً
+        const res = await axios.get(`https://api.alyachan.pro/api/snapany?url=${encodeURIComponent(url)}&apikey=G7p76L`);
         
-        if (!res.data || !res.data.result) {
-            throw new Error("لم يتم العثور على ملف قابل للتحميل.");
+        // التحقق من وجود بيانات
+        if (!res.data || !res.data.data) {
+            throw new Error("لم يتم العثور على محتوى.");
         }
 
-        const data = res.data.result;
-        // بعض الـ APIs تعيد الفيديو في 'url' أو 'video' أو 'hd'
-        const videoUrl = data.url || data.video || data.hd;
-        const title = data.title || "تم التحميل بواسطة كيـرو";
+        const videoData = res.data.data.find(item => item.type === "video") || res.data.data[0];
+        const videoUrl = videoData.url;
+        const title = res.data.metadata ? res.data.metadata.title : "فيديو بدون عنوان";
 
-        if (!videoUrl) throw new Error("رابط الفيديو غير صالح.");
+        if (!videoUrl) throw new Error("لا يوجد رابط فيديو مباشر.");
 
-        const cachePath = path.join(__dirname, 'cache', `download_${Date.now()}.mp4`);
-        
-        // إنشاء مجلد الكاش إذا لم يكن موجوداً
-        if (!fs.existsSync(path.join(__dirname, 'cache'))) {
-            fs.mkdirSync(path.join(__dirname, 'cache'));
-        }
+        const cachePath = path.join(__dirname, 'cache', `vid_${Date.now()}.mp4`);
+        if (!fs.existsSync(path.join(__dirname, 'cache'))) fs.mkdirSync(path.join(__dirname, 'cache'));
 
-        // تحميل الفيديو إلى السيرفر مؤقتاً
-        const videoBuffer = (await axios.get(videoUrl, { responseType: 'arraybuffer' })).data;
-        
-        // التأكد من حجم الملف (فيسبوك لا يسمح بإرسال ملفات ضخمة جداً عبر البوت)
-        if (videoBuffer.length > 25 * 1024 * 1024) { // 25MB
-            return api.sendMessage("⚠️ حجم الفيديو كبير جداً (أكثر من 25MB)، لا يمكن إرساله عبر ماسنجر.", threadID, messageID);
-        }
+        // تحميل الفيديو
+        const response = await axios({
+            method: 'get',
+            url: videoUrl,
+            responseType: 'stream'
+        });
 
-        fs.writeFileSync(cachePath, Buffer.from(videoBuffer));
+        const writer = fs.createWriteStream(cachePath);
+        response.data.pipe(writer);
 
-        // إرسال الفيديو
-        return api.sendMessage({
-            body: `✅ تـم الـتـحـمـيـل بـنـجـاح\n📝 العنوان: ${title}`,
-            attachment: fs.createReadStream(cachePath)
-        }, threadID, () => {
-            if (fs.existsSync(cachePath)) fs.unlinkSync(cachePath);
-        }, messageID);
+        writer.on('finish', () => {
+            // التحقق من حجم الملف
+            const stats = fs.statSync(cachePath);
+            const fileSizeInBytes = stats.size;
+            const fileSizeInMegabytes = fileSizeInBytes / (1024 * 1024);
+
+            if (fileSizeInMegabytes > 45) { // رفع الحد لـ 45 ميجا
+                fs.unlinkSync(cachePath);
+                return api.sendMessage("⚠️ الفيديو كبير جداً لإرساله عبر ماسنجر.", threadID, messageID);
+            }
+
+            return api.sendMessage({
+                body: `✅ تـم الـتـحـمـيـل بـنـجـاح\n\n📌 الـمـنـصـة: ${platform}\n📝 الـعـنـوان: ${title}`,
+                attachment: fs.createReadStream(cachePath)
+            }, threadID, () => fs.unlinkSync(cachePath), messageID);
+        });
+
+        writer.on('error', (err) => {
+            throw err;
+        });
 
     } catch (error) {
         console.error("Download Error:", error.message);
-        return api.sendMessage("❌ فشل التحميل! تأكد أن:\n1. الرابط صحيح.\n2. الفيديو عام (Public) وليس خاصاً.\n3. السيرفر لا يواجه ضغطاً حالياً.", threadID, messageID);
+        return api.sendMessage("❌ عذراً، لم أتمكن من تحميل هذا الفيديو. تأكد من أن الحساب صاحب الفيديو ليس خاصاً (Private).", threadID, messageID);
     }
 };
