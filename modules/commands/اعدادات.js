@@ -1,19 +1,23 @@
 const fs = require("fs-extra");
-const path = __dirname + "/cache/settings.json";
+const path = __dirname + "/cache/groups.json";
 
 module.exports.config = {
   name: "اعدادات",
-  version: "1.5.0",
-  hasPermssion: 1,
+  version: "2.0.0",
+  hasPermssion: 1, // للادمن فقط
   credits: "Gemini",
-  description: "ضبط إعدادات حماية المجموعة",
+  description: "ضبط حماية المجموعة",
   commandCategory: "الإدارة",
   usages: "اعدادات",
   cooldowns: 5
 };
 
 module.exports.run = async function ({ api, event }) {
-  const { threadID, messageID } = event;
+  const { threadID, messageID, senderID } = event;
+
+  // تجاهل غير الأدمن تماماً
+  const threadInfo = await api.getThreadInfo(threadID);
+  if (!threadInfo.adminIDs.some(admin => admin.id == senderID)) return;
 
   if (!fs.existsSync(__dirname + "/cache")) fs.mkdirSync(__dirname + "/cache");
   if (!fs.existsSync(path)) fs.writeFileSync(path, JSON.stringify({}));
@@ -27,7 +31,7 @@ module.exports.run = async function ({ api, event }) {
       nicknameProtect: false,
       antiOut: false,
       notifyEvents: false,
-      originalName: ""
+      originalName: threadInfo.threadName || ""
     };
     fs.writeFileSync(path, JSON.stringify(data, null, 2));
   }
@@ -35,31 +39,30 @@ module.exports.run = async function ({ api, event }) {
   const s = data[threadID];
   const status = (val) => val ? "✅" : "❌";
 
-  const msg = `⚙️ إعدادات حماية المجموعة:\n\n` +
+  const msg = `🛡️ قائمة الحماية:\n\n` +
     `1\nحماية اسم المجموعة [${status(s.nameProtect)}]\n\n` +
-    `2\nمكافحة تغير صورة المجموعه [${status(s.imageProtect)}]\n\n` +
-    `3\nمكافحة تغير الكنيات [${status(s.nicknameProtect)}]\n\n` +
+    `2\nمكافحة تغيير الصورة [${status(s.imageProtect)}]\n\n` +
+    `3\nمكافحة تغيير الكنيات [${status(s.nicknameProtect)}]\n\n` +
     `4\nمكافحة الخروج [${status(s.antiOut)}]\n\n` +
-    `5\nاخطار احداث المجموعة [${status(s.notifyEvents)}]\n\n` +
-    `• رد بالأرقام (مثال: 1 2 5) بشكل عمودي أو أفقي.\n` +
-    `• بعد الاختيار تفاعل بـ 👍 للحفظ.`;
+    `5\nإخطار أحداث المجموعة [${status(s.notifyEvents)}]\n\n` +
+    `• رد بالأرقام عمودياً لتغيير الحالة.\n` +
+    `• ثم تفاعل بـ 👍 لحفظ التعديلات.`;
 
   return api.sendMessage(msg, threadID, (err, info) => {
     global.client.handleReply.push({
       name: this.config.name,
       messageID: info.messageID,
-      author: event.senderID
+      author: senderID
     });
   }, messageID);
 };
 
 module.exports.handleReply = async function ({ api, event, handleReply }) {
-  const { threadID, messageID, body, senderID } = event;
+  const { threadID, body, senderID } = event;
   if (senderID != handleReply.author) return;
 
-  // استخراج الأرقام فقط من الرد (يدعم العمودي والأفقي)
   const choices = body.match(/\d+/g);
-  if (!choices) return api.sendMessage("❌ يرجى إدخال أرقام الخيارات فقط.", threadID, messageID);
+  if (!choices) return;
 
   let data = JSON.parse(fs.readFileSync(path));
   
@@ -73,13 +76,13 @@ module.exports.handleReply = async function ({ api, event, handleReply }) {
 
   fs.writeFileSync(path, JSON.stringify(data, null, 2));
 
-  return api.sendMessage("تم تحديد التعديلات بنجاح.\nتفاعل بـ 👍 على هذه الرسالة الآن لحفظ الإعدادات الجديدة.", threadID, (err, info) => {
+  api.sendMessage("تفاعل بـ 👍 لحفظ هذه الإعدادات وتحديث بيانات الحماية.", threadID, (err, info) => {
     global.client.handleReaction.push({
       name: this.config.name,
       messageID: info.messageID,
       author: senderID
     });
-  }, messageID);
+  });
 };
 
 module.exports.handleReaction = async function ({ api, event, handleReaction }) {
@@ -88,10 +91,10 @@ module.exports.handleReaction = async function ({ api, event, handleReaction }) 
   let data = JSON.parse(fs.readFileSync(path));
   const threadInfo = await api.getThreadInfo(event.threadID);
   
-  // حفظ الاسم الحالي ليكون هو المرجع عند الحماية
+  // تحديث الاسم المرجعي للمجموعة عند الحفظ
   data[event.threadID].originalName = threadInfo.threadName;
   fs.writeFileSync(path, JSON.stringify(data, null, 2));
 
-  api.unsendMessage(handleReaction.messageID); // حذف رسالة الطلب
-  return api.sendMessage("✅ تم حفظ الإعدادات وتحديث حالة الحماية.", event.threadID);
+  api.unsendMessage(handleReaction.messageID);
+  return api.sendMessage("✅ تم الحفظ. الحماية نشطة الآن.", event.threadID);
 };
