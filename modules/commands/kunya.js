@@ -1,39 +1,40 @@
 module.exports.config = {
   name: "كنية",
-  version: "1.0.0",
-  hasPermssion: 1, // أدمن فقط
-  credits: "ChatGPT",
-  description: "تعيين كنية لعضو أو لنفسك",
+  version: "1.1.0",
+  hasPermssion: 1, 
+  credits: "Gemini",
+  description: "تعيين كنية لعضو أو لنفسك (للأدمن فقط)",
   commandCategory: "الإدارة",
-  usages: "كنية <الكنية> + تاغ / رد (اختياري)",
-  cooldowns: 0
+  usages: "[الكنية] أو بالرد على رسالة أو بعمل تاغ",
+  cooldowns: 2
 };
 
 module.exports.run = async function ({ api, event, args }) {
   const { threadID, messageID, senderID, mentions, type, messageReply } = event;
 
-  // تجاهل غير الأدمن
-  if (event.senderID && !event.isAdmin) return;
+  // التحقق من صلاحيات الأدمن
+  const threadInfo = await api.getThreadInfo(threadID);
+  const adminIDs = threadInfo.adminIDs.map(admin => admin.id);
+  
+  if (!adminIDs.includes(senderID)) return;
 
-  if (!args[0]) return;
+  let targetID;
+  let nickname;
 
-  const nickname = args.join(" ");
-
-  let targetID = senderID;
-
-  // إذا في رد
-  if (type === "message_reply" && messageReply) {
+  // تحديد الشخص والكنية
+  if (type === "message_reply") {
     targetID = messageReply.senderID;
-  }
-
-  // إذا في تاغ
-  else if (Object.keys(mentions).length > 0) {
+    nickname = args.join(" ");
+  } else if (Object.keys(mentions).length > 0) {
     targetID = Object.keys(mentions)[0];
+    nickname = args.join(" ").replace(mentions[targetID], "").trim();
+  } else {
+    targetID = senderID;
+    nickname = args.join(" ");
   }
 
-  try {
-    await api.changeNickname(nickname, threadID, targetID);
-  } catch (e) {
-    return;
-  }
+  if (!nickname && args.length == 0 && type != "message_reply") return;
+
+  // تنفيذ التغيير بدون إرسال رسالة نجاح
+  api.changeNickname(nickname || "", threadID, targetID);
 };
