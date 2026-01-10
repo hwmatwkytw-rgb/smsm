@@ -1,208 +1,122 @@
-Module.exports.config = {
-  name: "كايروس",
-  Auth: 0,
-  Class: "ذكاء اصطناعي",
-  Owner: "محمد",
-  Hide: false,
-  How: "كايروس [سؤالك]",
-  Multi: ["ai", "gpt", "kairos"],
-  Time: 0,
-  Info: "ذكاء اصطناعي كايروس"
+module.exports.config = {
+  name: "كاريوس",
+  version: "1.1.0",
+  hasPermssion: 0,
+  credits: "عمر",
+  description: "ذكاء اصطناعي متطور باسم كاريوس للرد على استفساراتك",
+  commandCategory: "ذكاء اصطناعي",
+  usages: "[السؤال]",
+  cooldowns: 2,
 };
 
 const conversations = new Map();
 
-module.exports.onPick = async function({ args, event, api, sh }) {
+module.exports.run = async function({ api, event, args }) {
   const axios = require("axios");
-  const userId = event.senderID;
+  const { threadID, messageID, senderID } = event;
   const question = args.join(" ").trim();
   
+  // أمر مسح الذاكرة
   if (question === "مسح" || question === "reset") {
-    conversations.delete(userId);
-    return sh.reply("『 KAIROS • كايروس 』\n─── ✧ ───\n✅ تم تصغير الذاكرة ومسح المحادثة بنجاح.\n─── ✧ ───");
+    conversations.delete(senderID);
+    return api.sendMessage("◈ ──『 ❀ كاريوس ❀ 』── ◈\n❁┊✅ تم مسح ذاكرة المحادثة بنجاح\n◈ ──────────── ◈", threadID, messageID);
   }
   
   if (!question) {
-    return sh.reply("『 KAIROS • كايروس 』\n─── ✧ ───\n⚠️ يرجى كتابة سؤالك ليتمكن كايروس من الرد.\n─── ✧ ───");
+    return api.sendMessage("◈ ──『 ❀ كاريوس ❀ 』── ◈\n❁┊⚠️ تفضل يا صديقي، اسألني أي شيء..\n◈ ──────────── ◈", threadID, messageID);
   }
 
   try {
-    if (!conversations.has(userId)) {
-      conversations.set(userId, []);
+    if (!conversations.has(senderID)) {
+      conversations.set(senderID, []);
     }
     
-    const history = conversations.get(userId);
-    
-    history.push({
-      role: "user",
-      content: question
-    });
-    
-    if (history.length > 20) {
-      history.splice(0, history.length - 20);
-    }
+    const history = conversations.get(senderID);
+    history.push({ role: "user", content: question });
+
+    // تحديد عدد الرسائل بـ 15 لتجنب البطء في الرد
+    if (history.length > 15) history.splice(0, history.length - 15);
 
     const boundary = "----WebKitFormBoundary" + Math.random().toString(36).substring(2);
-    
-    let formData = "";
-    formData += `--${boundary}\r\n`;
-    formData += `Content-Disposition: form-data; name="chat_style"\r\n\r\nchat\r\n`;
-    formData += `--${boundary}\r\n`;
-    formData += `Content-Disposition: form-data; name="chatHistory"\r\n\r\n${JSON.stringify(history)}\r\n`;
-    formData += `--${boundary}\r\n`;
-    formData += `Content-Disposition: form-data; name="model"\r\n\r\nstandard\r\n`;
-    formData += `--${boundary}\r\n`;
-    formData += `Content-Disposition: form-data; name="hacker_is_stinky"\r\n\r\nvery_stinky\r\n`;
-    formData += `--${boundary}\r\n`;
-    formData += `Content-Disposition: form-data; name="enabled_tools"\r\n\r\n[]\r\n`;
-    formData += `--${boundary}--\r\n`;
+    let formData = `--${boundary}\r\nContent-Disposition: form-data; name="chat_style"\r\n\r\nchat\r\n` +
+                   `--${boundary}\r\nContent-Disposition: form-data; name="chatHistory"\r\n\r\n${JSON.stringify(history)}\r\n` +
+                   `--${boundary}\r\nContent-Disposition: form-data; name="model"\r\n\r\nstandard\r\n` +
+                   `--${boundary}\r\nContent-Disposition: form-data; name="hacker_is_stinky"\r\n\r\nvery_stinky\r\n` +
+                   `--${boundary}\r\nContent-Disposition: form-data; name="enabled_tools"\r\n\r\n[]\r\n--${boundary}--\r\n`;
 
     const response = await axios({
       method: "POST",
       url: "https://api.deepai.org/hacking_is_a_serious_crime",
-      headers: {
-        "content-type": `multipart/form-data; boundary=${boundary}`,
-        "origin": "https://deepai.org",
-        "user-agent": "Mozilla/5.0"
+      headers: { 
+        "content-type": `multipart/form-data; boundary=${boundary}`, 
+        "origin": "https://deepai.org", 
+        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" 
       },
       data: formData
     });
 
-    let reply = "";
-    
-    if (response.data) {
-      if (typeof response.data === "string") {
-        reply = response.data;
-      } else if (response.data.output) {
-        reply = response.data.output;
-      } else if (response.data.text) {
-        reply = response.data.text;
+    let reply = response.data.output || response.data.text || (typeof response.data === "string" ? response.data : "عذراً، لم أستطع معالجة هذا الطلب.");
+    reply = reply.replace(/\\n/g, "\n").trim();
+
+    history.push({ role: "assistant", content: reply });
+
+    return api.sendMessage(`◈ ──『 ❀ كاريوس ❀ 』── ◈\n\n${reply}\n\n◈ ──────────── ◈`, threadID, (err, info) => {
+      if (!err && global.client && global.client.handleReply) {
+        global.client.handleReply.push({
+          name: this.config.name,
+          messageID: info.messageID,
+          author: senderID,
+          type: "continue"
+        });
       }
-    }
-
-    reply = reply
-      .replace(/\\n/g, "\n")
-      .replace(/\\u0021/g, "!")
-      .replace(/\\"/g, '"')
-      .trim();
-    
-    if (reply.length > 2000) {
-      reply = reply.substring(0, 1997) + "...";
-    }
-
-    history.push({
-      role: "assistant",
-      content: reply
-    });
-
-    const sent = await sh.reply(`『 KAIROS • كايروس 』\n─── ✧ ───\n🤖 الرد:\n\n${reply}\n\n─── ✧ ───`);
-    
-    if (sent && sent.messageID) {
-      global.shelly.Reply.push({
-        name: "كايروس",
-        ID: sent.messageID,
-        author: event.senderID,
-        type: "continue"
-      });
-    }
+    }, messageID);
 
   } catch (error) {
-    console.error("خطأ:", error.message);
-    sh.reply("『 KAIROS • كايروس 』\n─── ✧ ───\n❌ عذراً، حدث خطأ تقني أثناء معالجة الطلب.\n─── ✧ ───");
+    console.error("Error in Karios Command:", error);
+    return api.sendMessage("❌ عذراً، حدث خطأ أثناء محاولة الاتصال بكاريوس.", threadID, messageID);
   }
 };
 
-module.exports.Reply = async function({ event, sh, Reply }) {
+module.exports.handleReply = async function({ api, event, handleReply }) {
   const axios = require("axios");
-  const userId = event.senderID;
-  
-  if (Reply.type !== "continue" || Reply.author !== userId) return;
-  
-  const question = event.body.trim();
-  if (!question) return;
+  const { threadID, messageID, senderID, body } = event;
+  if (handleReply.author != senderID) return;
 
   try {
-    if (!conversations.has(userId)) {
-      conversations.set(userId, []);
-    }
-    
-    const history = conversations.get(userId);
-    
-    history.push({
-      role: "user",
-      content: question
-    });
-    
-    if (history.length > 20) {
-      history.splice(0, history.length - 20);
-    }
+    const history = conversations.get(senderID) || [];
+    history.push({ role: "user", content: body });
 
     const boundary = "----WebKitFormBoundary" + Math.random().toString(36).substring(2);
-    
-    let formData = "";
-    formData += `--${boundary}\r\n`;
-    formData += `Content-Disposition: form-data; name="chat_style"\r\n\r\nchat\r\n`;
-    formData += `--${boundary}\r\n`;
-    formData += `Content-Disposition: form-data; name="chatHistory"\r\n\r\n${JSON.stringify(history)}\r\n`;
-    formData += `--${boundary}\r\n`;
-    formData += `Content-Disposition: form-data; name="model"\r\n\r\nstandard\r\n`;
-    formData += `--${boundary}\r\n`;
-    formData += `Content-Disposition: form-data; name="hacker_is_stinky"\r\n\r\nvery_stinky\r\n`;
-    formData += `--${boundary}\r\n`;
-    formData += `Content-Disposition: form-data; name="enabled_tools"\r\n\r\n[]\r\n`;
-    formData += `--${boundary}--\r\n`;
+    let formData = `--${boundary}\r\nContent-Disposition: form-data; name="chat_style"\r\n\r\nchat\r\n` +
+                   `--${boundary}\r\nContent-Disposition: form-data; name="chatHistory"\r\n\r\n${JSON.stringify(history)}\r\n` +
+                   `--${boundary}\r\nContent-Disposition: form-data; name="model"\r\n\r\nstandard\r\n` +
+                   `--${boundary}\r\nContent-Disposition: form-data; name="hacker_is_stinky"\r\n\r\nvery_stinky\r\n` +
+                   `--${boundary}\r\nContent-Disposition: form-data; name="enabled_tools"\r\n\r\n[]\r\n--${boundary}--\r\n`;
 
     const response = await axios({
       method: "POST",
       url: "https://api.deepai.org/hacking_is_a_serious_crime",
-      headers: {
-        "content-type": `multipart/form-data; boundary=${boundary}`,
-        "origin": "https://deepai.org",
-        "user-agent": "Mozilla/5.0"
+      headers: { 
+        "content-type": `multipart/form-data; boundary=${boundary}`, 
+        "origin": "https://deepai.org", 
+        "user-agent": "Mozilla/5.0" 
       },
       data: formData
     });
 
-    let reply = "";
-    
-    if (response.data) {
-      if (typeof response.data === "string") {
-        reply = response.data;
-      } else if (response.data.output) {
-        reply = response.data.output;
-      } else if (response.data.text) {
-        reply = response.data.text;
-      }
-    }
+    let reply = response.data.output || response.data.text || "حدث خطأ.";
+    reply = reply.replace(/\\n/g, "\n").trim();
+    history.push({ role: "assistant", content: reply });
 
-    reply = reply
-      .replace(/\\n/g, "\n")
-      .replace(/\\u0021/g, "!")
-      .replace(/\\"/g, '"')
-      .trim();
-    
-    if (reply.length > 2000) {
-      reply = reply.substring(0, 1997) + "...";
-    }
-
-    history.push({
-      role: "assistant",
-      content: reply
-    });
-
-    const sent = await sh.reply(`『 KAIROS • كايروس 』\n─── ✧ ───\n🤖 الرد:\n\n${reply}\n\n─── ✧ ───`);
-    
-    if (sent && sent.messageID) {
-      global.shelly.Reply.push({
-        name: "كايروس",
-        ID: sent.messageID,
-        author: event.senderID,
+    return api.sendMessage(`◈ ──『 ❀ كاريوس ❀ 』── ◈\n\n${reply}\n\n◈ ──────────── ◈`, threadID, (err, info) => {
+      global.client.handleReply.push({
+        name: this.config.name,
+        messageID: info.messageID,
+        author: senderID,
         type: "continue"
       });
-    }
-
-  } catch (error) {
-    console.error("خطأ:", error.message);
-    sh.reply("『 KAIROS • كايروس 』\n─── ✧ ───\n❌ عذراً، حدث خطأ تقني أثناء معالجة الطلب.\n─── ✧ ───");
+    }, messageID);
+  } catch (e) {
+    console.error(e);
   }
 };
