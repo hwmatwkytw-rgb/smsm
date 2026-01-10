@@ -1,13 +1,13 @@
-module.exports.config = {
+Module.exports.config = {
   name: "كايروس",
   Auth: 0,
   Class: "ذكاء اصطناعي",
   Owner: "محمد",
   Hide: false,
   How: "كايروس [سؤالك]",
-  Multi: ["kairos", "ai"],
+  Multi: ["ai", "gpt", "kairos"],
   Time: 0,
-  Info: "مساعدك الشخصي الذكي كايروس"
+  Info: "ذكاء اصطناعي كايروس"
 };
 
 const conversations = new Map();
@@ -17,17 +17,13 @@ module.exports.onPick = async function({ args, event, api, sh }) {
   const userId = event.senderID;
   const question = args.join(" ").trim();
   
-  // تصميم الواجهة (Header & Footer)
-  const header = "╭───『 𝗞𝗔𝗜𝗥𝗢𝗦 』───⟡\n";
-  const footer = "\n╰──────────────⟡";
-
   if (question === "مسح" || question === "reset") {
     conversations.delete(userId);
-    return sh.reply(`${header}🔹 تم تنظيف سجل المحادثة بنجاح!${footer}`);
+    return sh.reply("『 KAIROS • كايروس 』\n─── ✧ ───\n✅ تم تصغير الذاكرة ومسح المحادثة بنجاح.\n─── ✧ ───");
   }
   
   if (!question) {
-    return sh.reply(`${header}⚠️ يرجى كتابة سؤالك للتحدث معي.${footer}`);
+    return sh.reply("『 KAIROS • كايروس 』\n─── ✧ ───\n⚠️ يرجى كتابة سؤالك ليتمكن كايروس من الرد.\n─── ✧ ───");
   }
 
   try {
@@ -36,16 +32,30 @@ module.exports.onPick = async function({ args, event, api, sh }) {
     }
     
     const history = conversations.get(userId);
-    history.push({ role: "user", content: question });
     
-    if (history.length > 20) history.splice(0, history.length - 20);
+    history.push({
+      role: "user",
+      content: question
+    });
+    
+    if (history.length > 20) {
+      history.splice(0, history.length - 20);
+    }
 
     const boundary = "----WebKitFormBoundary" + Math.random().toString(36).substring(2);
-    let formData = `--${boundary}\r\nContent-Disposition: form-data; name="chat_style"\r\n\r\nchat\r\n` +
-                   `--${boundary}\r\nContent-Disposition: form-data; name="chatHistory"\r\n\r\n${JSON.stringify(history)}\r\n` +
-                   `--${boundary}\r\nContent-Disposition: form-data; name="model"\r\n\r\nstandard\r\n` +
-                   `--${boundary}\r\nContent-Disposition: form-data; name="hacker_is_stinky"\r\n\r\nvery_stinky\r\n` +
-                   `--${boundary}\r\nContent-Disposition: form-data; name="enabled_tools"\r\n\r\n[]\r\n--${boundary}--\r\n`;
+    
+    let formData = "";
+    formData += `--${boundary}\r\n`;
+    formData += `Content-Disposition: form-data; name="chat_style"\r\n\r\nchat\r\n`;
+    formData += `--${boundary}\r\n`;
+    formData += `Content-Disposition: form-data; name="chatHistory"\r\n\r\n${JSON.stringify(history)}\r\n`;
+    formData += `--${boundary}\r\n`;
+    formData += `Content-Disposition: form-data; name="model"\r\n\r\nstandard\r\n`;
+    formData += `--${boundary}\r\n`;
+    formData += `Content-Disposition: form-data; name="hacker_is_stinky"\r\n\r\nvery_stinky\r\n`;
+    formData += `--${boundary}\r\n`;
+    formData += `Content-Disposition: form-data; name="enabled_tools"\r\n\r\n[]\r\n`;
+    formData += `--${boundary}--\r\n`;
 
     const response = await axios({
       method: "POST",
@@ -58,14 +68,34 @@ module.exports.onPick = async function({ args, event, api, sh }) {
       data: formData
     });
 
-    let reply = response.data.output || response.data.text || (typeof response.data === "string" ? response.data : "");
-    reply = reply.replace(/\\n/g, "\n").replace(/\\u0021/g, "!").replace(/\\"/g, '"').trim();
+    let reply = "";
     
-    if (reply.length > 2000) reply = reply.substring(0, 1997) + "...";
+    if (response.data) {
+      if (typeof response.data === "string") {
+        reply = response.data;
+      } else if (response.data.output) {
+        reply = response.data.output;
+      } else if (response.data.text) {
+        reply = response.data.text;
+      }
+    }
 
-    history.push({ role: "assistant", content: reply });
+    reply = reply
+      .replace(/\\n/g, "\n")
+      .replace(/\\u0021/g, "!")
+      .replace(/\\"/g, '"')
+      .trim();
+    
+    if (reply.length > 2000) {
+      reply = reply.substring(0, 1997) + "...";
+    }
 
-    const sent = await sh.reply(`${header}🤖 : ${reply}${footer}`);
+    history.push({
+      role: "assistant",
+      content: reply
+    });
+
+    const sent = await sh.reply(`『 KAIROS • كايروس 』\n─── ✧ ───\n🤖 الرد:\n\n${reply}\n\n─── ✧ ───`);
     
     if (sent && sent.messageID) {
       global.shelly.Reply.push({
@@ -77,55 +107,102 @@ module.exports.onPick = async function({ args, event, api, sh }) {
     }
 
   } catch (error) {
-    console.error("خطأ كايروس:", error.message);
-    sh.reply(`${header}❌ عذراً، واجهت مشكلة في معالجة طلبك.${footer}`);
+    console.error("خطأ:", error.message);
+    sh.reply("『 KAIROS • كايروس 』\n─── ✧ ───\n❌ عذراً، حدث خطأ تقني أثناء معالجة الطلب.\n─── ✧ ───");
   }
 };
 
 module.exports.Reply = async function({ event, sh, Reply }) {
-  if (Reply.type !== "continue" || Reply.author !== event.senderID) return;
-  
   const axios = require("axios");
   const userId = event.senderID;
+  
+  if (Reply.type !== "continue" || Reply.author !== userId) return;
+  
   const question = event.body.trim();
   if (!question) return;
 
-  const header = "╭───『 𝗞𝗔𝗜𝗥𝗢𝗦 』───⟡\n";
-  const footer = "\n╰──────────────⟡";
-
   try {
-    const history = conversations.get(userId) || [];
-    history.push({ role: "user", content: question });
+    if (!conversations.has(userId)) {
+      conversations.set(userId, []);
+    }
+    
+    const history = conversations.get(userId);
+    
+    history.push({
+      role: "user",
+      content: question
+    });
+    
+    if (history.length > 20) {
+      history.splice(0, history.length - 20);
+    }
 
     const boundary = "----WebKitFormBoundary" + Math.random().toString(36).substring(2);
-    let formData = `--${boundary}\r\nContent-Disposition: form-data; name="chat_style"\r\n\r\nchat\r\n` +
-                   `--${boundary}\r\nContent-Disposition: form-data; name="chatHistory"\r\n\r\n${JSON.stringify(history)}\r\n` +
-                   `--${boundary}\r\nContent-Disposition: form-data; name="model"\r\n\r\nstandard\r\n` +
-                   `--${boundary}\r\nContent-Disposition: form-data; name="hacker_is_stinky"\r\n\r\nvery_stinky\r\n` +
-                   `--${boundary}\r\nContent-Disposition: form-data; name="enabled_tools"\r\n\r\n[]\r\n--${boundary}--\r\n`;
+    
+    let formData = "";
+    formData += `--${boundary}\r\n`;
+    formData += `Content-Disposition: form-data; name="chat_style"\r\n\r\nchat\r\n`;
+    formData += `--${boundary}\r\n`;
+    formData += `Content-Disposition: form-data; name="chatHistory"\r\n\r\n${JSON.stringify(history)}\r\n`;
+    formData += `--${boundary}\r\n`;
+    formData += `Content-Disposition: form-data; name="model"\r\n\r\nstandard\r\n`;
+    formData += `--${boundary}\r\n`;
+    formData += `Content-Disposition: form-data; name="hacker_is_stinky"\r\n\r\nvery_stinky\r\n`;
+    formData += `--${boundary}\r\n`;
+    formData += `Content-Disposition: form-data; name="enabled_tools"\r\n\r\n[]\r\n`;
+    formData += `--${boundary}--\r\n`;
 
     const response = await axios({
       method: "POST",
       url: "https://api.deepai.org/hacking_is_a_serious_crime",
-      headers: { "content-type": `multipart/form-data; boundary=${boundary}`, "origin": "https://deepai.org" },
+      headers: {
+        "content-type": `multipart/form-data; boundary=${boundary}`,
+        "origin": "https://deepai.org",
+        "user-agent": "Mozilla/5.0"
+      },
       data: formData
     });
 
-    let reply = response.data.output || response.data.text || "";
-    reply = reply.trim();
+    let reply = "";
     
-    history.push({ role: "assistant", content: reply });
-    const sent = await sh.reply(`${header}🤖 : ${reply}${footer}`);
+    if (response.data) {
+      if (typeof response.data === "string") {
+        reply = response.data;
+      } else if (response.data.output) {
+        reply = response.data.output;
+      } else if (response.data.text) {
+        reply = response.data.text;
+      }
+    }
+
+    reply = reply
+      .replace(/\\n/g, "\n")
+      .replace(/\\u0021/g, "!")
+      .replace(/\\"/g, '"')
+      .trim();
+    
+    if (reply.length > 2000) {
+      reply = reply.substring(0, 1997) + "...";
+    }
+
+    history.push({
+      role: "assistant",
+      content: reply
+    });
+
+    const sent = await sh.reply(`『 KAIROS • كايروس 』\n─── ✧ ───\n🤖 الرد:\n\n${reply}\n\n─── ✧ ───`);
     
     if (sent && sent.messageID) {
       global.shelly.Reply.push({
         name: "كايروس",
         ID: sent.messageID,
-        author: userId,
+        author: event.senderID,
         type: "continue"
       });
     }
-  } catch (e) {
-    sh.reply(`${header}❌ حدث خطأ أثناء الرد المستمر.${footer}`);
+
+  } catch (error) {
+    console.error("خطأ:", error.message);
+    sh.reply("『 KAIROS • كايروس 』\n─── ✧ ───\n❌ عذراً، حدث خطأ تقني أثناء معالجة الطلب.\n─── ✧ ───");
   }
 };
