@@ -3,10 +3,10 @@ const path = __dirname + "/cache/groups.json";
 
 module.exports.config = {
   name: "اعدادات",
-  version: "2.0.0",
-  hasPermssion: 1, // للادمن فقط
+  version: "2.9.0",
+  hasPermssion: 1, 
   credits: "Gemini",
-  description: "ضبط حماية المجموعة",
+  description: "ضبط حماية وإعدادات المجموعة",
   commandCategory: "الإدارة",
   usages: "اعدادات",
   cooldowns: 5
@@ -15,7 +15,6 @@ module.exports.config = {
 module.exports.run = async function ({ api, event }) {
   const { threadID, messageID, senderID } = event;
 
-  // تجاهل غير الأدمن تماماً
   const threadInfo = await api.getThreadInfo(threadID);
   if (!threadInfo.adminIDs.some(admin => admin.id == senderID)) return;
 
@@ -26,11 +25,12 @@ module.exports.run = async function ({ api, event }) {
 
   if (!data[threadID]) {
     data[threadID] = {
+      antiSpam: false,
+      antiOut: false,
       nameProtect: false,
       imageProtect: false,
       nicknameProtect: false,
-      antiOut: false,
-      notifyEvents: false,
+      antiJoin: false,
       originalName: threadInfo.threadName || ""
     };
     fs.writeFileSync(path, JSON.stringify(data, null, 2));
@@ -39,14 +39,14 @@ module.exports.run = async function ({ api, event }) {
   const s = data[threadID];
   const status = (val) => val ? "✅" : "❌";
 
-  const msg = `🛡️ قائمة الحماية:\n\n` +
-    `1\nحماية اسم المجموعة [${status(s.nameProtect)}]\n\n` +
-    `2\nمكافحة تغيير الصورة [${status(s.imageProtect)}]\n\n` +
-    `3\nمكافحة تغيير الكنيات [${status(s.nicknameProtect)}]\n\n` +
-    `4\nمكافحة الخروج [${status(s.antiOut)}]\n\n` +
-    `5\nإخطار أحداث المجموعة [${status(s.notifyEvents)}]\n\n` +
-    `• رد بالأرقام عمودياً لتغيير الحالة.\n` +
-    `• ثم تفاعل بـ 👍 لحفظ التعديلات.`;
+  const msg = `⌈ إعـدادات الـمـجـموعـة ⌋\n\n` +
+    `1. [${status(s.antiSpam)}] مكافحة الإزعاج\n` +
+    `2. [${status(s.antiOut)}] منع الخروج من المجموعة\n` +
+    `3. [${status(s.nameProtect)}] منع تغيير اسم المجموعة\n` +
+    `4. [${status(s.imageProtect)}] منع تغيير صورة المجموعة\n` +
+    `5. [${status(s.nicknameProtect)}] منع تغيير اللقب\n` +
+    `6. [${status(s.antiJoin)}] منع دخول أعضاء جدد\n\n` +
+    `⇒ رد بالأرقام لاختيار الإعداد الذي تريد تغييره`;
 
   return api.sendMessage(msg, threadID, (err, info) => {
     global.client.handleReply.push({
@@ -67,16 +67,28 @@ module.exports.handleReply = async function ({ api, event, handleReply }) {
   let data = JSON.parse(fs.readFileSync(path));
   
   choices.forEach(num => {
-    if (num == "1") data[threadID].nameProtect = !data[threadID].nameProtect;
-    if (num == "2") data[threadID].imageProtect = !data[threadID].imageProtect;
-    if (num == "3") data[threadID].nicknameProtect = !data[threadID].nicknameProtect;
-    if (num == "4") data[threadID].antiOut = !data[threadID].antiOut;
-    if (num == "5") data[threadID].notifyEvents = !data[threadID].notifyEvents;
+    if (num == "1") data[threadID].antiSpam = !data[threadID].antiSpam;
+    if (num == "2") data[threadID].antiOut = !data[threadID].antiOut;
+    if (num == "3") data[threadID].nameProtect = !data[threadID].nameProtect;
+    if (num == "4") data[threadID].imageProtect = !data[threadID].imageProtect;
+    if (num == "5") data[threadID].nicknameProtect = !data[threadID].nicknameProtect;
+    if (num == "6") data[threadID].antiJoin = !data[threadID].antiJoin;
   });
 
   fs.writeFileSync(path, JSON.stringify(data, null, 2));
 
-  api.sendMessage("تفاعل بـ 👍 لحفظ هذه الإعدادات وتحديث بيانات الحماية.", threadID, (err, info) => {
+  const s = data[threadID];
+  const status = (val) => val ? "✅" : "❌";
+  const updatedMsg = `⌈ إعـدادات الـمـجـموعـة ⌋\n\n` +
+    `1. [${status(s.antiSpam)}] مكافحة الإزعاج\n` +
+    `2. [${status(s.antiOut)}] منع الخروج من المجموعة\n` +
+    `3. [${status(s.nameProtect)}] منع تغيير اسم المجموعة\n` +
+    `4. [${status(s.imageProtect)}] منع تغيير صورة المجموعة\n` +
+    `5. [${status(s.nicknameProtect)}] منع تغيير اللقب\n` +
+    `6. [${status(s.antiJoin)}] منع دخول أعضاء جدد\n\n` +
+    `⇒ تفاعل 👍 لحفظ الإعدادات الجديدة`;
+
+  api.sendMessage(updatedMsg, threadID, (err, info) => {
     global.client.handleReaction.push({
       name: this.config.name,
       messageID: info.messageID,
@@ -91,10 +103,9 @@ module.exports.handleReaction = async function ({ api, event, handleReaction }) 
   let data = JSON.parse(fs.readFileSync(path));
   const threadInfo = await api.getThreadInfo(event.threadID);
   
-  // تحديث الاسم المرجعي للمجموعة عند الحفظ
   data[event.threadID].originalName = threadInfo.threadName;
   fs.writeFileSync(path, JSON.stringify(data, null, 2));
 
   api.unsendMessage(handleReaction.messageID);
-  return api.sendMessage("✅ تم الحفظ. الحماية نشطة الآن.", event.threadID);
+  return api.sendMessage("✅ تم الحفظ بنجاح.", event.threadID);
 };
