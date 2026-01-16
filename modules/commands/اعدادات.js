@@ -3,10 +3,10 @@ const path = __dirname + "/cache/groups.json";
 
 module.exports.config = {
   name: "اعدادات",
-  version: "3.5.0",
+  version: "2.9.1",
   hasPermssion: 1, 
   credits: "Gemini",
-  description: "لوحة تحكم حماية المجموعة (ستايل حديث)",
+  description: "ضبط حماية وإعدادات المجموعة",
   commandCategory: "الإدارة",
   usages: "اعدادات",
   cooldowns: 5
@@ -14,127 +14,75 @@ module.exports.config = {
 
 module.exports.run = async function ({ api, event }) {
   const { threadID, messageID, senderID } = event;
-
   const threadInfo = await api.getThreadInfo(threadID);
-  if (!threadInfo.adminIDs.some(admin => admin.id == senderID)) {
-    return api.sendMessage("⚠️ عذراً، هذا الأمر مخصص للمسؤولين فقط.", threadID, messageID);
-  }
+  if (!threadInfo.adminIDs.some(admin => admin.id == senderID)) return;
 
   if (!fs.existsSync(__dirname + "/cache")) fs.mkdirSync(__dirname + "/cache");
   if (!fs.existsSync(path)) fs.writeFileSync(path, JSON.stringify({}));
   
   let data = JSON.parse(fs.readFileSync(path));
-
   if (!data[threadID]) {
     data[threadID] = {
-      antiSpam: false,
-      antiOut: false,
-      nameProtect: false,
-      imageProtect: false,
-      nicknameProtect: false,
-      antiJoin: false,
+      antiSpam: false, antiOut: false, nameProtect: false,
+      imageProtect: false, nicknameProtect: false, antiJoin: false,
       originalName: threadInfo.threadName || ""
     };
     fs.writeFileSync(path, JSON.stringify(data, null, 2));
   }
 
   const s = data[threadID];
-  const status = (val) => val ? "🔔 مـفـعـل" : "🔕 مـعـطـل";
-
-  const msg = `⌬──────────────⌬
-   ⫹⫺ لـوحـة تـحـكـم الـحـمـايـة 🛠️
-⌬──────────────⌬
-  [ 1 ] مـكـافـحـة الإزعـاج ↬ ${status(s.antiSpam)}
-  [ 2 ] مـنـع الـخـروج ↬ ${status(s.antiOut)}
-  [ 3 ] حـمـايـة الاسـم ↬ ${status(s.nameProtect)}
-  [ 4 ] حـمـايـة الـصـورة ↬ ${status(s.imageProtect)}
-  [ 5 ] حـمـايـة الـكـنـيـات ↬ ${status(s.nicknameProtect)}
-  [ 6 ] مـنـع الـدخول ↬ ${status(s.antiJoin)}
-⌬──────────────⌬
-  💌 رد بـرقم الخيار للتبديل.
-  ✅ تـفاعل بـ ( 👍 ) للـحفظ.`;
+  const status = (val) => val ? "✅" : "❌";
+  const msg = `⌈ إعـدادات الـمـجـموعـة ⌋\n\n` +
+    `1. [${status(s.antiSpam)}] مكافحة الإزعاج\n` +
+    `2. [${status(s.antiOut)}] منع الخروج من المجموعة\n` +
+    `3. [${status(s.nameProtect)}] منع تغيير اسم المجموعة\n` +
+    `4. [${status(s.imageProtect)}] منع تغيير صورة المجموعة\n` +
+    `5. [${status(s.nicknameProtect)}] منع تغيير اللقب\n` +
+    `6. [${status(s.antiJoin)}] منع دخول أعضاء جدد\n\n` +
+    `⇒ رد بالأرقام لاختيار الإعداد الذي تريد تغييره`;
 
   return api.sendMessage(msg, threadID, (err, info) => {
-    global.client.handleReply.push({
-      name: this.config.name,
-      messageID: info.messageID,
-      author: senderID
-    });
-    global.client.handleReaction.push({
-      name: this.config.name,
-      messageID: info.messageID,
-      author: senderID
-    });
+    global.client.handleReply.push({ name: this.config.name, messageID: info.messageID, author: senderID });
   }, messageID);
 };
 
 module.exports.handleReply = async function ({ api, event, handleReply }) {
-  const { threadID, body, senderID, messageID } = event;
+  const { threadID, body, senderID } = event;
   if (senderID != handleReply.author) return;
-
   const choices = body.match(/\d+/g);
   if (!choices) return;
 
   let data = JSON.parse(fs.readFileSync(path));
-  
   choices.forEach(num => {
-    if (num == "1") data[threadID].antiSpam = !data[threadID].antiSpam;
-    if (num == "2") data[threadID].antiOut = !data[threadID].antiOut;
-    if (num == "3") data[threadID].nameProtect = !data[threadID].nameProtect;
-    if (num == "4") data[threadID].imageProtect = !data[threadID].imageProtect;
-    if (num == "5") data[threadID].nicknameProtect = !data[threadID].nicknameProtect;
-    if (num == "6") data[threadID].antiJoin = !data[threadID].antiJoin;
+    const keys = ["antiSpam", "antiOut", "nameProtect", "imageProtect", "nicknameProtect", "antiJoin"];
+    if (keys[num-1]) data[threadID][keys[num-1]] = !data[threadID][keys[num-1]];
   });
-
   fs.writeFileSync(path, JSON.stringify(data, null, 2));
 
   const s = data[threadID];
-  const status = (val) => val ? "🔔 مـفـعـل" : "🔕 مـعـطـل";
-  
-  const updatedMsg = `⌬──────────────⌬
-   ⫹⫺ تـم تـحـديث الإعـدادات 🛡️
-⌬──────────────⌬
-  [ 1 ] مـكـافـحـة الإزعـاج ↬ ${status(s.antiSpam)}
-  [ 2 ] مـنـع الـخـروج ↬ ${status(s.antiOut)}
-  [ 3 ] حـمـايـة الاسـم ↬ ${status(s.nameProtect)}
-  [ 4 ] حـمـايـة الـصـورة ↬ ${status(s.imageProtect)}
-  [ 5 ] حـمـايـة الـكـنـيـات ↬ ${status(s.nicknameProtect)}
-  [ 6 ] مـنـع الـدخول ↬ ${status(s.antiJoin)}
-⌬──────────────⌬
-  👍 ضـع تـفاعل للـتأكيد والـحفظ.`;
+  const status = (val) => val ? "✅" : "❌";
+  const updatedMsg = `⌈ إعـدادات الـمـجـموعـة ⌋\n\n` +
+    `1. [${status(s.antiSpam)}] مكافحة الإزعاج\n` +
+    `2. [${status(s.antiOut)}] منع الخروج من المجموعة\n` +
+    `3. [${status(s.nameProtect)}] منع تغيير اسم المجموعة\n` +
+    `4. [${status(s.imageProtect)}] منع تغيير صورة المجموعة\n` +
+    `5. [${status(s.nicknameProtect)}] منع تغيير اللقب\n` +
+    `6. [${status(s.antiJoin)}] منع دخول أعضاء جدد\n\n` +
+    `⇒ تفاعل 👍 لحفظ الإعدادات الجديدة`;
 
-  api.unsendMessage(handleReply.messageID);
   api.sendMessage(updatedMsg, threadID, (err, info) => {
-    global.client.handleReply.push({
-      name: this.config.name,
-      messageID: info.messageID,
-      author: senderID
-    });
-    global.client.handleReaction.push({
-      name: this.config.name,
-      messageID: info.messageID,
-      author: senderID
-    });
-  }, messageID);
+    global.client.handleReaction.push({ name: this.config.name, messageID: info.messageID, author: senderID });
+  });
 };
 
 module.exports.handleReaction = async function ({ api, event, handleReaction }) {
-  const { threadID, userID, reaction, messageID } = event;
-  if (userID != handleReaction.author || reaction != "👍") return;
-  
+  if (event.userID != handleReaction.author || event.reaction != "👍") return;
+  const threadInfo = await api.getThreadInfo(event.threadID);
+  const isBotAdmin = threadInfo.adminIDs.some(admin => admin.id == api.getCurrentUserID());
   let data = JSON.parse(fs.readFileSync(path));
-  const botID = api.getCurrentUserID();
-  const threadInfo = await api.getThreadInfo(threadID);
-  const isAdmin = threadInfo.adminIDs.some(i => i.id == botID);
-  
-  data[threadID].originalName = threadInfo.threadName;
+  data[event.threadID].originalName = threadInfo.threadName;
   fs.writeFileSync(path, JSON.stringify(data, null, 2));
-
   api.unsendMessage(handleReaction.messageID);
-
-  if (!isAdmin) {
-    return api.sendMessage("⚠️ تم الحفظ، ولكن البوت ليس أدمن في المجموعة! لذلك سيتم تجاهل (حماية الصورة) و (منع الخروج) حتى ترفعني لمسؤول.", threadID);
-  } else {
-    return api.sendMessage("✅ تم حفظ الإعدادات بنجاح وتفعيل الحماية.", threadID);
-  }
+  if (!isBotAdmin) return api.sendMessage("⚠️ البوت ليس ادمن في المجموعه لذالك سيتم تجاهل حماية الصورة و مكافحة الخروج.", event.threadID);
+  return api.sendMessage("✅ تم الحفظ بنجاح.", event.threadID);
 };
