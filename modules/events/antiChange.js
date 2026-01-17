@@ -6,9 +6,9 @@ const path = __dirname + "/../commands/cache/groups.json";
 module.exports.config = {
   name: "antiChange",
   eventType: ["log:thread-name", "log:thread-icon", "log:user-nickname", "log:unsubscribe", "log:subscribe"],
-  version: "3.2.0",
+  version: "3.5.0",
   credits: "Gemini",
-  description: "نظام حماية متطور (استعادة بيانات + تمييز الطرد)"
+  description: "نظام استعادة البيانات والحماية من التغيير"
 };
 
 module.exports.run = async function ({ api, event }) {
@@ -22,89 +22,66 @@ module.exports.run = async function ({ api, event }) {
   const s = data[threadID];
   if (!s) return;
 
-  // --- 1. حماية اسم المجموعة ---
+  // 1. حماية الاسم واستعادته
   if (logMessageType === "log:thread-name" && s.nameProtect) {
-    if (logMessageData.name !== s.originalName) {
-      return api.setTitle(s.originalName, threadID, (err) => {
-        if (!err) api.sendMessage("⌈ م تهبش الاسم يعب 🦧 ⌋", threadID);
-      });
-    }
-  }
-
-  // --- 2. حماية الكنيات (الألقاب) ---
-  if (logMessageType === "log:user-nickname" && s.nicknameProtect) {
-    const oldNickname = logMessageData.oldNickname || "";
-    const victimID = logMessageData.participantFbId;
-    // استعادة الكنية القديمة فوراً
-    return api.changeNickname(oldNickname, threadID, victimID, (err) => {
-      if (!err) api.sendMessage("⌈ م تناخس في الألقاب 🦧🤞 ⌋", threadID);
+    return api.setTitle(s.originalName, threadID, () => {
+      api.sendMessage("⌈ م تهبش الاسم يعب 🦧 ⌋", threadID);
     });
   }
 
-  // --- 3. منع الدخول (Anti-Join) ---
-  if (logMessageType === "log:subscribe" && s.antiJoin) {
-    const addedUsers = logMessageData.addedParticipants;
-    for (let user of addedUsers) {
-      if (user.userFbId != botID) {
-        api.removeUserFromGroup(user.userFbId, threadID);
-      }
-    }
-    return api.sendMessage(`⚠️ منع الدخول مفعل، المجموعة مغلقة حالياً.`, threadID);
+  // 2. حماية الكنيات واستعادتها
+  if (logMessageType === "log:user-nickname" && s.nicknameProtect) {
+    const oldNickname = logMessageData.oldNickname || "";
+    const victimID = logMessageData.participantFbId;
+    return api.changeNickname(oldNickname, threadID, victimID, () => {
+      api.sendMessage("⌈ م تناخس في الألقاب 🦧🤞 ⌋", threadID);
+    });
   }
 
-  // --- 4. معالجة المغادرة والطرد (Unsubscribe) ---
+  // 3. منع الدخول (Anti-Join)
+  if (logMessageType === "log:subscribe" && s.antiJoin) {
+    logMessageData.addedParticipants.forEach(user => {
+      if (user.userFbId != botID) api.removeUserFromGroup(user.userFbId, threadID);
+    });
+    return api.sendMessage(`⚠️ المجموعة مغلقة حالياً ممنوع الدخول.`, threadID);
+  }
+
+  // 4. منع الخروج + رد الطرد (بلع بانكاي)
   if (logMessageType === "log:unsubscribe") {
     const leftID = logMessageData.leftParticipantFbId;
     if (leftID == botID) return;
 
-    // الحالة أ: الشخص طُرد بواسطة مسؤول (Admin)
+    // تم الطرد بواسطة شخص آخر
     if (author !== leftID) {
       return api.sendMessage("بلع بانكاي  <(｀^´)>", threadID);
     }
 
-    // الحالة ب: الشخص خرج بنفسه (Anti-Out)
+    // خرج بنفسه
     if (s.antiOut) {
       api.addUserToGroup(leftID, threadID, (err) => {
-        if (!err) {
-          api.sendMessage("الحق العب قال مارق بكرامتو 🐸🤞", threadID);
-        } else {
-          api.sendMessage("حاول يهرب بس الحماية منعته (تعذر إعادته تلقائياً)", threadID);
-        }
+        if (!err) api.sendMessage("الحق العب قال مارق بكرامتو 🐸🤞", threadID);
       });
     } else {
-      // رسالة الوداع العادية
       try {
         const info = await api.getUserInfo(leftID);
-        const name = info[leftID].name;
         const threadInfo = await api.getThreadInfo(threadID);
-        const threadName = threadInfo.threadName || "مجموعة غير مسمى";
-        const participantCount = threadInfo.participantIDs.length;
-
-        const msg = `╭─────────────╮\n         ⌈ غـادر أحـد الأعـضـاء ⌋\n╰─────────────╯\n\n  ⪼ الـعـضـو ⌭ ${name}\n  ⪼ الـمـجـمـوعـة ⌭ ${threadName}\n  ⪼ عـددنـا الآن ⌭ ( ${participantCount} )\n  ⪼ الـتـوقـيـت ⌭ ${time}\n\n⌬─────────────⌬`;
+        const msg = `╭─────────────╮\n         ⌈ غـادر أحـد الأعـضـاء ⌋\n╰─────────────╯\n\n  ⪼ الـعـضـو ⌭ ${info[leftID].name}\n  ⪼ الـمـجـمـوعـة ⌭ ${threadInfo.threadName}\n  ⪼ عـددنـا الآن ⌭ ( ${threadInfo.participantIDs.length} )\n  ⪼ الـتـوقـيـت ⌭ ${time}\n\n⌬─────────────⌬`;
         api.sendMessage(msg, threadID);
-      } catch (e) {
-        console.log(e);
-      }
+      } catch (e) { console.log(e) }
     }
   }
 
-  // --- 5. حماية الصورة (تتطلب رابط الصورة في originalImage) ---
+  // 5. حماية الصورة واستعادتها
   if (logMessageType === "log:thread-icon" && s.imageProtect) {
     if (s.originalImage) {
-      const imagePath = __dirname + "/cache/restored_icon.png";
       try {
-        const getImg = (await axios.get(s.originalImage, { responseType: "arraybuffer" })).data;
-        fs.writeFileSync(imagePath, Buffer.from(getImg, "utf-8"));
-        
-        api.changeGroupImage(fs.createReadStream(imagePath), threadID, (err) => {
-          fs.unlinkSync(imagePath);
-          if (!err) api.sendMessage("⌈ م تلعب بـ صورة القروب 🦧 ⌋", threadID);
+        const imgRes = await axios.get(s.originalImage, { responseType: "stream" });
+        api.changeGroupImage(imgRes.data, threadID, () => {
+          api.sendMessage("⌈ م تلعب بـ صورة القروب 🦧 ⌋", threadID);
         });
       } catch (e) {
-        api.sendMessage("⌈ م تلعب بي امك 🦧 ⌋\n(فشلت استعادة الصورة لعدم توفر رابط صالح)", threadID);
+        api.sendMessage("⌈ م تلعب بي امك 🦧 ⌋", threadID);
       }
-    } else {
-      api.sendMessage("⌈ م تلعب بي امك 🦧 ⌋", threadID);
     }
   }
 };
