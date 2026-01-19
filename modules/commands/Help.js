@@ -1,20 +1,20 @@
 module.exports.config = {
   name: "اوامر",
-  version: "7.6.0",
+  version: "9.5.0",
   hasPermssion: 0,
-  credits: "ᎠᎯᎢᎬ ᏚᎮᎯᏒᎠᎯ",
-  description: "قائمة الأوامر مقسمة على 3 صفحات",
+  credits: "ᎠᎯᏁᎢᎬ ᏚᎮᎯᏒᎠᎯ",
+  description: "قائمة أوامر حديثة بنمط هندسي رفيع لبوت ڪايࢪوس",
   commandCategory: "نظام",
-  usages: "[رقم الصفحة]",
+  usages: "[رقم الصفحة / اسم الأمر]",
   cooldowns: 5
 };
 
 module.exports.languages = {
   "en": {
-    "moduleInfo": "─┈┈┈──┈┈┈─\n📜 تفاصيل الأمر\n─┈┈┈──┈┈┈─\n\n❒ الاسم: %1\n❒ الوصف: %2\n❒ الاستخدام: %3\n❒ الفئة: %4\n❒ الانتظار: %5 ثانية\n❒ الصلاحية: %6\n\n» بواسطة: %7",
+    "moduleInfo": "─── ◈ ɪɴғᴏʀᴍᴀᴛɪᴏɴ ◈ ───\n\n⋄ الاسم: %1\n⋄ الوصف: %2\n⋄ الاستخدام: %3\n⋄ الفئة: %4\n⋄ الانتظار: %5s\n⋄ الصلاحية: %6\n\n◈ Credits: %7",
     "user": "مستخدم",
-    "adminGroup": "مشرف المجموعة",
-    "adminBot": "مطور البوت"
+    "adminGroup": "مشرف",
+    "adminBot": "مطور"
   }
 };
 
@@ -32,56 +32,41 @@ module.exports.run = async function({ api, event, args, getText }) {
     const categories = {};
     for (let [name, value] of commands) {
       if (value.config.hasPermssion == 2 || value.config.commandCategory?.toLowerCase() === "مطور") continue;
-      const cat = value.config.commandCategory || "عام";
+      const cat = value.config.commandCategory || "General";
       if (!categories[cat]) categories[cat] = [];
       categories[cat].push(name);
     }
 
-    // دمج الفئات الصغيرة
-    const mergedCategories = {};
-    const smallCategories = [];
-    for (let cat in categories) {
-      if (categories[cat].length < 2 && cat !== "عام") {
-        smallCategories.push(...categories[cat]);
-      } else {
-        mergedCategories[cat] = categories[cat];
-      }
-    }
-    if (smallCategories.length > 0) mergedCategories["أخرى"] = (mergedCategories["أخرى"] || []).concat(smallCategories);
-
     let sections = [];
-    for (let cat in mergedCategories) {
-      const cmds = mergedCategories[cat].sort();
-      let section = `  ⌬──『 ${cat} 』──⌬\n`;
-      section += `  ⌫ ${cmds.join(" • ")}\n`;
+    for (let cat in categories) {
+      const cmds = categories[cat].sort();
+      let section = `⌬ ── [ ${cat.toUpperCase()} ]\n`;
+      section += `┊ ➟ ${cmds.join("  •  ")}\n`;
       sections.push(section);
     }
 
-    // إجبار النظام على 3 صفحات فقط
     const totalPages = 3;
     const itemsPerPage = Math.ceil(sections.length / totalPages);
-    
     let page = parseInt(args[0]) || 1;
     if (page < 1 || page > totalPages) page = 1;
 
     const start = (page - 1) * itemsPerPage;
-    const displaySections = sections.slice(start, start + itemsPerPage).join("\n");
+    const displaySections = sections.slice(start, start + itemsPerPage).join("┊\n");
 
     const msg = 
-`─┈┈┈──┈┈┈─
-  قـائـمـة الأوامـر
-─┈┈┈──┈┈┈─
+`『 ᴋᴀɪʀᴏs ᴄᴏᴍᴍᴀɴᴅs 』
+─── · · · ───
 
 ${displaySections}
 
-─┈┈┈──┈┈┈─
-❒ عدد الأوامر: [ ${commands.size} ]
-❒ الصفحة: [ ${page} / ${totalPages} ]
-❒ الرمز الحالي: [ ${prefix} ]
-─┈┈┈──┈┈┈─
-💡 المطور: ᎠᎯᏁᎢᎬᏚᎮᎯᏒᎠᎯ
-✨ اللهم صلِّ وسلم على نبينا محمد
-─┈┈┈──┈┈┈─`;
+─── · · · ───
+◈ الأوامر: ${commands.size}
+◈ الصفحة: ${page} / ${totalPages}
+◈ الرمز: ${prefix}
+─── · · · ───
+🤖 اسم البوت: ڪايࢪوس
+👑 المطوࢪ: ᎠᎯᏁᎢᎬ ᏚᎮᎯᏒᎠᎯ
+✨ اللهم صلِّ وسلم على سيدنا محمد 🤍🍂`;
 
     try {
       const image = (await axios.get(imageUrl, { responseType: "stream" })).data;
@@ -91,7 +76,6 @@ ${displaySections}
     }
   }
 
-  // كود تفاصيل الأمر يبقى كما هو
   return api.sendMessage(
     getText("moduleInfo", command.config.name, command.config.description, `${prefix}${command.config.name} ${(command.config.usages) ? command.config.usages : ""}`, command.config.commandCategory, command.config.cooldowns, (command.config.hasPermssion == 0) ? getText("user") : (command.config.hasPermssion == 1) ? getText("adminGroup") : getText("adminBot"), command.config.credits),
     threadID,
