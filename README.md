@@ -1,63 +1,87 @@
-<p align="center">
-  <h1 align="center">𝗞𝗜𝗥𝗢𝗦 𝗕𝗢𝗧 🤖</h1>
-</p>
+<div align="center">
 
-<p align="center">
-𝗔𝗗𝗩𝗔𝗡𝗖𝗘𝗗 𝗠𝗨𝗟𝗧𝗜-𝗣𝗨𝗥𝗣𝗢𝗦𝗘 𝗠𝗘𝗦𝗦𝗘𝗡𝗚𝗘𝗥 𝗕𝗢𝗧 𝗦𝗬𝗦𝗧𝗘𝗠
-</p>
+<img src="https://capsule-render.vercel.app/api?type=rect&color=gradient&height=140&section=header&text=𝗞𝗜𝗥𝗢𝗦%20𝗕𝗢𝗧&fontSize=50&fontAlignY=55&animation=fadeIn" />
 
-<p align="center">
-<a href="https://www.facebook.com/share/181x8t62Rk/">📘 𝗙𝗔𝗖𝗘𝗕𝗢𝗢Ｋ</a> ⇄
-<a href="https://www.instagram.com/ymmkwlw?igsh=MTc5MWRucjVhMXJ4dQ==">📸 𝗜𝗡𝗦𝗧𝗔𝗚𝗥𝗔𝗠</a>
-</p>
+### 🤖 𝗔𝗗𝗩𝗔𝗡𝗖𝗘𝗗 𝗠𝗨𝗟𝗧𝗜-𝗣𝗨𝗥𝗣𝗢𝗦𝗘 𝗠𝗘𝗦𝗦𝗘𝗡𝗚𝗘𝗥 𝗕𝗢𝗧
 
-<p align="center">
-<img src="https://img.shields.io/badge/𝗩𝗘𝗥𝗦𝗜𝗢𝗡-3.5.0-blueviolet">
-<img src="https://img.shields.io/badge/𝗦𝗧𝗔𝗧𝗨𝗦-𝗢𝗡𝗟𝗜𝗡𝗘-success">
-<img src="https://img.shields.io/badge/𝗡𝗢𝗗𝗘-%3E%3D18-green">
-<img src="https://img.shields.io/badge/𝗟𝗜𝗖𝗘𝗡𝗦𝗘-𝗠𝗜𝗧-orange">
-</p>
+</div>
 
 ---
 
-## 📖 𝗣𝗥𝗢𝗝𝗘𝗖𝗧 𝗢𝗩𝗘𝗥𝗩𝗜𝗘𝗪
-**𝗞𝗜𝗥𝗢𝗦 𝗕𝗢𝗧** 𝗜𝗦 𝗔 𝗡𝗘𝗫𝗧-𝗚𝗘𝗡𝗘𝗥𝗔𝗧𝗜𝗢𝗡, 𝗛𝗜𝗚𝗛-𝗣𝗘𝗥𝗙𝗢𝗥𝗠𝗔𝗡𝗖𝗘 𝗠𝗘𝗦𝗦𝗘𝗡𝗚𝗘𝗥 𝗙𝗥𝗔𝗠𝗘𝗪𝗢𝗥𝗞.  
-𝗕𝗨𝗜𝗟𝗧 𝗪𝗜𝗧𝗛 ⚡ 𝗡𝗢𝗗𝗘.𝗝𝗦, 𝗜𝗧 𝗢𝗙𝗙𝗘𝗥𝗦 𝗨𝗡𝗠𝗔𝗧𝗖𝗛𝗘𝗗 𝗦𝗧𝗔𝗕𝗜𝗟𝗜𝗧𝗬 𝗔𝗡𝗗 𝗔 𝗪𝗜𝗗𝗘 𝗔𝗥𝗥𝗔𝗬 𝗢𝗙 🧠 𝗔𝗜 𝗜𝗡𝗧𝗘𝗚𝗥𝗔𝗧𝗜𝗢𝗡𝗦.
+<div align="center">
+
+<a href="https://www.facebook.com/share/181x8t62Rk/">
+  <img src="https://img.shields.io/badge/FACEBOOK-𝗞𝗜𝗥𝗢𝗦-blue?style=for-the-badge&logo=facebook&logoColor=white">
+</a>
+<a href="https://www.instagram.com/ymmkwlw?igsh=MTc5MWRucjVhMXJ4dQ==">
+  <img src="https://img.shields.io/badge/INSTAGRAM-𝗞𝗜𝗥𝗢𝗦-pink?style=for-the-badge&logo=instagram&logoColor=white">
+</a>
+
+</div>
 
 ---
 
-## 🎯 𝗣𝗥𝗢𝗝𝗘𝗖𝗧 𝗚𝗢𝗔𝗟𝗦
-- 🚀 𝗗𝗘𝗟𝗜𝗩𝗘𝗥 𝗟𝗜𝗚𝗛𝗧𝗡𝗜𝗡𝗚-𝗙𝗔𝗦𝗧 𝗥𝗘𝗦𝗣𝗢𝗡𝗦𝗘𝗦  
-- 🛡️ 𝗘𝗡𝗛𝗔𝗡𝗖𝗘 𝗚𝗥𝗢𝗨𝗣 𝗦𝗘𝗖𝗨𝗥𝗜𝗧𝗬 & 𝗔𝗨𝗧𝗢-𝗠𝗢𝗗  
-- 🎭 𝗣𝗥𝗢𝗩𝗜𝗗𝗘 𝗨𝗡𝗜𝗤𝗨𝗘 𝗘𝗡𝗧𝗘𝗥𝗧𝗔𝗜𝗡𝗠𝗘𝗡𝗧 𝗠𝗢𝗗𝗨𝗟𝗘𝗦  
-- 🌐 𝗦𝗨𝗣𝗣𝗢𝗥𝗧 𝗠𝗨𝗟𝗧𝗜-𝗟𝗔𝗡𝗚𝗨𝗔𝗚𝗘 𝗜𝗡𝗧𝗘𝗥𝗔𝗖𝗧𝗜𝗢𝗡𝗦  
+<div align="center">
+
+<img src="https://img.shields.io/badge/VERSION-3.5.0-purple?style=for-the-badge">
+<img src="https://img.shields.io/badge/STATUS-ONLINE-brightgreen?style=for-the-badge">
+<img src="https://img.shields.io/badge/NODE-%3E=18-green?style=for-the-badge">
+<img src="https://img.shields.io/badge/LICENSE-MIT-orange?style=for-the-badge">
+
+</div>
 
 ---
 
-## 🧩 𝗦𝗬𝗦𝗧𝗘𝗠 𝗔𝗥𝗖𝗛𝗜𝗧𝗘𝗖𝗧𝗨𝗥𝗘
-**𝗞𝗜𝗥𝗢𝗦 𝗕𝗢𝗧** 𝗨𝗧𝗜𝗟𝗜𝗭𝗘𝗦 𝗔 𝗗𝗬𝗡𝗔𝗠𝗜𝗖 𝗠𝗢𝗗𝗨𝗟𝗔𝗥 𝗦𝗬𝗦𝗧𝗘𝗠:
-- 📦 𝗣𝗟𝗨𝗚-𝗔𝗡𝗗-𝗣𝗟𝗔𝗬 𝗖𝗢𝗠𝗠𝗔𝗡𝗗 𝗛𝗔𝗡𝗗𝗟𝗘𝗥  
-- 🔄 𝗔𝗨𝗧𝗢-𝗥𝗘𝗦𝗧𝗔𝗥𝗧 𝗢𝗡 𝗖𝗥𝗔𝗦𝗛 𝗣𝗥𝗢𝗧𝗘𝗖𝗧𝗜𝗢𝗡  
-- 💎 𝗟𝗢𝗪 𝗥𝗔𝗠 𝗨𝗦𝗔𝗚𝗘 𝗢𝗣𝗧𝗜𝗠𝗜𝗭𝗔𝗧𝗜𝗢𝗡  
-- 📡 𝗥𝗘𝗔𝗟-𝗧𝗜𝗠𝗘 𝗗𝗔𝗧𝗔𝗕𝗔𝗦𝗘 𝗦𝗬𝗡𝗖  
+## 🌌 𝗔𝗕𝗢𝗨𝗧 𝗞𝗜𝗥𝗢𝗦 𝗕𝗢𝗧
+> **𝗞𝗜𝗥𝗢𝗦 𝗕𝗢𝗧** هو نظام بوت متطور فائق الأداء مبني خصيصًا ليقدم تجربة ذكية، قوية، وأنيقة في بيئة Messenger.
+
+⚡ سريع  
+🧠 ذكي  
+🛡️ آمن  
+🎮 ممتع  
+💎 احترافي  
+
+تم تطويره باستخدام **Node.js** مع دعم كامل للتوسعة والتخصيص.
 
 ---
 
-## 🚀 𝗞𝗘𝗬 𝗙𝗘𝗔𝗧𝗨𝗥𝗘𝗦
-- 🤖 **𝗔𝗜 𝗘𝗡𝗚𝗜𝗡𝗘**: 𝗖𝗛𝗔𝗧𝗚𝗣𝗧 & 𝗚𝗘𝗠𝗜𝗡𝗜 𝗜𝗡𝗧𝗘𝗚𝗥𝗔𝗧𝗜𝗢𝗡  
-- 🎨 **𝗜𝗠𝗔𝗚𝗘 𝗚𝗘𝗡**: 𝗖𝗥𝗘𝗔𝗧𝗘 𝗔𝗥𝗧 𝗩𝗜𝗔 𝗧𝗘𝗫𝗧 𝗖𝗢𝗠𝗠𝗔𝗡𝗗𝗦  
-- ⚔️ **𝗔𝗡𝗧𝗜-𝗦𝗣𝗔𝗠**: 𝗔𝗗𝗩𝗔𝗡𝗖𝗘𝗗 𝗨𝗦𝗘𝗥 𝗙𝗜𝗟𝗧𝗘𝗥𝗜𝗡𝗚  
-- 🎵 **𝗠𝗘𝗗𝗜𝗔 𝗗𝗢𝗪𝗡𝗟𝗢𝗔𝗗𝗘𝗥**: 𝗬𝗢𝗨𝗧𝗨𝗕𝗘, 𝗧𝗜𝗞𝗧𝗢𝗞 & 𝗙𝗕  
-- 🎮 **𝗚𝗔𝗠𝗜𝗡𝗚 𝗭𝗢𝗡𝗘**: 𝗥𝗣𝗚, 𝗤𝗨𝗜𝗭𝗭𝗘𝗦 & 𝗘𝗖𝗢𝗡𝗢𝗠𝗬  
-- 📊 **𝗔𝗡𝗔𝗟𝗬𝗧𝗜𝗖𝗦**: 𝗧𝗥𝗔𝗖𝗞 𝗚𝗥𝗢𝗨𝗣 𝗔𝗖𝗧𝗜𝗩𝗜𝗧𝗬 𝗟𝗜𝗩𝗘  
+## 🚀 𝗪𝗛𝗬 𝗞𝗜𝗥𝗢𝗦 ?
+- ⚡ استجابة فورية فائقة السرعة  
+- 🛡️ حماية متقدمة للمجموعات  
+- 🎭 أنظمة ترفيه فريدة  
+- 🌍 دعم متعدد اللغات  
+- 🤖 دمج الذكاء الاصطناعي  
+- 📊 تحليل نشاط القروبات  
 
 ---
 
-## 📂 𝗣𝗥𝗢𝗝𝗘𝗖𝗧 𝗦𝗧𝗥𝗨𝗖𝗧𝗨𝗥𝗘
-```text
+## 🧠 𝗔𝗜 𝗣𝗢𝗪𝗘𝗥
+يدعم أنظمة ذكاء متقدمة مثل:
+- ChatGPT Integration  
+- Gemini AI  
+- Auto Smart Replies  
+- Smart Moderation  
+- AI Image Generation  
+
+---
+
+## 💎 𝗞𝗘𝗬 𝗦𝗬𝗦𝗧𝗘𝗠𝗦
+| النظام | الوصف |
+|------|------|
+| 🛡️ الحماية | Anti-Spam + Auto Kick |
+| 🎮 الألعاب | اقتصاد + RPG + تحديات |
+| 📥 التحميل | تيك توك - يوتيوب - فيسبوك |
+| 🧩 الإضافات | نظام Plugins احترافي |
+| 📡 المراقبة | تتبع نشاط القروب لحظيًا |
+
+---
+
+## 🏗️ 𝗣𝗥𝗢𝗝𝗘𝗖𝗧 𝗦𝗧𝗥𝗨𝗖𝗧𝗨𝗥𝗘
+```bash
 𝗞𝗜𝗥𝗢𝗦-𝗕𝗢𝗧/
-├── 📁 𝗠𝗼𝗱𝘂𝗹𝗲𝘀/       # 𝗖𝗼𝗺𝗺𝗮𝗻𝗱𝘀 & 𝗘𝘃𝗲𝗻𝘁𝘀
-├── 📁 𝗟𝗶𝗯/           # 𝗖𝗼𝗿𝗲 𝗙𝘂𝗻𝗰𝘁𝗶𝗼𝗻𝘀
-├── 📁 𝗗𝗮𝘁𝗮/          # 𝗝𝗦𝗢𝗡 𝗦𝘁𝗼𝗿𝗮𝗴𝗲
-├── 📄 𝗰𝗼𝗻𝗳𝗶𝗴.𝗷𝘀𝗼𝗻     # 𝗕𝗼𝘁 𝗦𝗲𝘁𝘁𝗶𝗻𝗴𝘀
-└── 📄 𝗶𝗻𝗱𝗲𝘅.𝗷𝘀        # 𝗠𝗮𝗶𝗻 𝗘𝗻𝘁𝗿𝘆 𝗣𝗼𝗶𝗻𝘁
+│
+├── 📁 Modules/     → الأوامر + الأحداث
+├── 📁 Lib/         → النظام الأساسي
+├── 📁 Data/        → قواعد البيانات JSON
+├── ⚙️ config.json   → الإعدادات
+└── 🚀 index.js      → تشغيل البوت
