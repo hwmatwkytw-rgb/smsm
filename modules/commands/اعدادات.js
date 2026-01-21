@@ -1,12 +1,14 @@
 const fs = require("fs-extra");
+const axios = require("axios");
 const path = __dirname + "/cache/groups.json";
+const imagePath = __dirname + "/cache/group_images/";
 
 module.exports.config = {
   name: "اعدادات",
-  version: "3.5.0",
+  version: "4.0.0",
   hasPermssion: 1, 
   credits: "Gemini",
-  description: "ضبط حماية المجموعة (للمسؤولين فقط)",
+  description: "ضبط حماية المجموعة وحفظ البيانات",
   commandCategory: "الإدارة",
   usages: "اعدادات",
   cooldowns: 5
@@ -17,24 +19,20 @@ module.exports.run = async function ({ api, event }) {
 
   try {
     const threadInfo = await api.getThreadInfo(threadID);
-    // تجاهل صامت لغير الأدمن
     if (!threadInfo.adminIDs.some(admin => admin.id == senderID)) return;
 
     if (!fs.existsSync(__dirname + "/cache")) fs.mkdirSync(__dirname + "/cache");
+    if (!fs.existsSync(imagePath)) fs.mkdirSync(imagePath);
     if (!fs.existsSync(path)) fs.writeFileSync(path, JSON.stringify({}));
     
     let data = JSON.parse(fs.readFileSync(path));
 
     if (!data[threadID]) {
       data[threadID] = {
-        antiSpam: false,
-        antiOut: false,
-        nameProtect: false,
-        imageProtect: false,
-        nicknameProtect: false,
-        antiJoin: false,
+        antiSpam: false, antiOut: false, nameProtect: false,
+        imageProtect: false, nicknameProtect: false, antiJoin: false,
         originalName: threadInfo.threadName || "",
-        originalImage: threadInfo.imageSrc || ""
+        imageLocalPath: ""
       };
       fs.writeFileSync(path, JSON.stringify(data, null, 2));
     }
@@ -49,14 +47,10 @@ module.exports.run = async function ({ api, event }) {
       `4. [${status(s.imageProtect)}] حماية صورة المجموعة\n` +
       `5. [${status(s.nicknameProtect)}] حماية الألقاب\n` +
       `6. [${status(s.antiJoin)}] منع الانضمام\n\n` +
-      `☚ رد برقم الإعداد لتغييره\n☚ تفاعل بـ 👍 لحفظ الحالة الحالية للقروب كمرجع.`;
+      `☚ رد برقم الإعداد لتغييره\n☚ تفاعل بـ 👍 لحفظ الحالة الحالية كمرجع.`;
 
     return api.sendMessage(msg, threadID, (err, info) => {
-      global.client.handleReply.push({
-        name: this.config.name,
-        messageID: info.messageID,
-        author: senderID
-      });
+      global.client.handleReply.push({ name: this.config.name, messageID: info.messageID, author: senderID });
     }, messageID);
   } catch (e) { console.log(e) }
 };
@@ -91,8 +85,16 @@ module.exports.handleReaction = async function ({ api, event, handleReaction }) 
   let data = JSON.parse(fs.readFileSync(path));
   const threadInfo = await api.getThreadInfo(threadID);
   
-  data[threadID].originalName = threadInfo.threadName;
-  data[threadID].originalImage = threadInfo.imageSrc;
+  if (threadInfo.imageSrc) {
+    try {
+      const imgRes = await axios.get(threadInfo.imageSrc, { responseType: 'arraybuffer' });
+      const imgP = imagePath + `${threadID}.png`;
+      fs.writeFileSync(imgP, Buffer.from(imgRes.data, 'utf-8'));
+      data[threadID].imageLocalPath = imgP;
+    } catch (e) { console.log("خطأ في حفظ الصورة:", e) }
+  }
+
+  data[threadID].originalName = threadInfo.threadName || "";
   fs.writeFileSync(path, JSON.stringify(data, null, 2));
 
   api.unsendMessage(handleReaction.messageID);
@@ -101,6 +103,6 @@ module.exports.handleReaction = async function ({ api, event, handleReaction }) 
   if (!isBotAdmin) {
     api.sendMessage("⚠️ تم الحفظ، لكن ارفع البوت أدمن عشان الحماية تشتغل.", threadID);
   } else {
-    api.sendMessage("✅ تم تفعيل أنظمة الحماية واستعادة البيانات بنجاح.", threadID);
+    api.sendMessage("✅ تم تفعيل أنظمة الحماية وتثبيت البيانات بنجاح.", threadID);
   }
 };
