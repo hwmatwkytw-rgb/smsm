@@ -5,10 +5,10 @@ const imagePath = __dirname + "/cache/group_images/";
 
 module.exports.config = {
   name: "اعدادات",
-  version: "4.0.0",
+  version: "4.1.0",
   hasPermssion: 1, 
   credits: "Gemini",
-  description: "ضبط حماية المجموعة وحفظ البيانات",
+  description: "ضبط حماية المجموعة وحفظ البيانات الأصلية",
   commandCategory: "الإدارة",
   usages: "اعدادات",
   cooldowns: 5
@@ -19,8 +19,12 @@ module.exports.run = async function ({ api, event }) {
 
   try {
     const threadInfo = await api.getThreadInfo(threadID);
-    if (!threadInfo.adminIDs.some(admin => admin.id == senderID)) return;
+    // التأكد أن المستخدم أدمن
+    if (!threadInfo.adminIDs.some(admin => admin.id == senderID)) {
+        return api.sendMessage("❌ هذا الأمر مخصص لمسؤولي المجموعة فقط.", threadID, messageID);
+    }
 
+    // إنشاء المجلدات إذا لم تكن موجودة
     if (!fs.existsSync(__dirname + "/cache")) fs.mkdirSync(__dirname + "/cache");
     if (!fs.existsSync(imagePath)) fs.mkdirSync(imagePath);
     if (!fs.existsSync(path)) fs.writeFileSync(path, JSON.stringify({}));
@@ -47,7 +51,7 @@ module.exports.run = async function ({ api, event }) {
       `4. [${status(s.imageProtect)}] حماية صورة المجموعة\n` +
       `5. [${status(s.nicknameProtect)}] حماية الألقاب\n` +
       `6. [${status(s.antiJoin)}] منع الانضمام\n\n` +
-      `☚ رد برقم الإعداد لتغييره\n☚ تفاعل بـ 👍 لحفظ الحالة الحالية كمرجع.`;
+      `☚ رد برقم الإعداد لتغييره\n☚ تفاعل بـ 👍 لحفظ البيانات الحالية كمرجع (الاسم والصورة).`;
 
     return api.sendMessage(msg, threadID, (err, info) => {
       global.client.handleReply.push({ name: this.config.name, messageID: info.messageID, author: senderID });
@@ -72,7 +76,7 @@ module.exports.handleReply = async function ({ api, event, handleReply }) {
   const s = data[threadID];
   const status = (val) => val ? "✅" : "❌";
   
-  const updatedMsg = `⌈ تـحـديـث الإعـدادات ⌋\n\n1. [${status(s.antiSpam)}] مكافحة الإزعاج\n2. [${status(s.antiOut)}] منع الخروج\n3. [${status(s.nameProtect)}] حماية الاسم\n4. [${status(s.imageProtect)}] حماية الصورة\n5. [${status(s.nicknameProtect)}] حماية الألقاب\n6. [${status(s.antiJoin)}] منع الانضمام\n\n⇒ تفاعل بـ 👍 للاعتماد والحفظ النهائي.`;
+  const updatedMsg = `⌈ تـحـديـث الإعـدادات ⌋\n\n1. [${status(s.antiSpam)}] مكافحة الإزعاج\n2. [${status(s.antiOut)}] منع الخروج\n3. [${status(s.nameProtect)}] حماية الاسم\n4. [${status(s.imageProtect)}] حماية الصورة\n5. [${status(s.nicknameProtect)}] حماية الألقاب\n6. [${status(s.antiJoin)}] منع الانضمام\n\n⇒ تفاعل بـ 👍 للاعتماد وتحديث البيانات الأصلية.`;
 
   api.sendMessage(updatedMsg, threadID, (err, info) => {
     global.client.handleReaction.push({ name: this.config.name, messageID: info.messageID, author: senderID });
@@ -82,9 +86,11 @@ module.exports.handleReply = async function ({ api, event, handleReply }) {
 module.exports.handleReaction = async function ({ api, event, handleReaction }) {
   if (event.userID != handleReaction.author || event.reaction != "👍") return;
   const { threadID } = event;
+  
   let data = JSON.parse(fs.readFileSync(path));
   const threadInfo = await api.getThreadInfo(threadID);
   
+  // حفظ صورة المجموعة الحالية كمرجع للحماية
   if (threadInfo.imageSrc) {
     try {
       const imgRes = await axios.get(threadInfo.imageSrc, { responseType: 'arraybuffer' });
@@ -101,8 +107,8 @@ module.exports.handleReaction = async function ({ api, event, handleReaction }) 
   const isBotAdmin = threadInfo.adminIDs.some(admin => admin.id == api.getCurrentUserID());
   
   if (!isBotAdmin) {
-    api.sendMessage("⚠️ تم الحفظ، لكن ارفع البوت أدمن عشان الحماية تشتغل.", threadID);
+    api.sendMessage("⚠️ تم الحفظ بنجاح، لكن يرجى رفع البوت مسؤولاً (Admin) لضمان عمل الحماية.", threadID);
   } else {
-    api.sendMessage("✅ تم تفعيل أنظمة الحماية وتثبيت البيانات بنجاح.", threadID);
+    api.sendMessage("✅ تم تفعيل أنظمة الحماية وتثبيت البيانات الأصلية بنجاح.", threadID);
   }
 };
