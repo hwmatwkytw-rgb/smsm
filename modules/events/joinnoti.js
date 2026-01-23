@@ -1,9 +1,9 @@
 module.exports.config = {
   name: "joinNoti",
   eventType: ["log:subscribe"],
-  version: "1.0.1",
+  version: "1.0.3",
   credits: "Mirai Team | تعديل: ᎠᎯᏁᎢᎬ  ᏚᎮᎯᏒᎠᎯ",
-  description: "إشعار انضمام البوت أو عضو باستايل مخصص",
+  description: "إشعار انضمام البوت أو عضو - استجابة البوت محصورة للمطور فقط",
   dependencies: {
     "fs-extra": "",
     "moment-timezone": ""
@@ -11,11 +11,16 @@ module.exports.config = {
 };
 
 module.exports.run = async function({ api, event, Users }) {
-  const { threadID } = event;
+  const { threadID, author } = event;
+  const developerID = "61581906898524"; // معرف المطور الخاص بك
 
-  // ====== 🟦 انضمام البوت (استايل خفيف مع الجملة الجديدة) ======
+  // ====== 🟦 انضمام البوت (فحص المطور بصمت) ======
   if (event.logMessageData.addedParticipants.some(i => i.userFbId == api.getCurrentUserID())) {
+    
+    // إذا لم يكن المطور هو من أضاف البوت، يتجاهل الأمر تماماً ولا يرسل شيئاً
+    if (author !== developerID) return;
 
+    // التنفيذ فقط إذا كان المضيف هو المطور
     api.changeNickname(
       `[ / ] • ${global.config.BOTNAME || "KYROS BOT"}`,
       threadID,
@@ -34,9 +39,10 @@ module.exports.run = async function({ api, event, Users }) {
     return api.sendMessage(botMsg, threadID);
   }
 
-  // ====== 🟨 انضمام عضو (الاستايل المطلوب بدقة) ======
+  // ====== 🟨 انضمام عضو عادي (ترحيب طبيعي) ======
   try {
-    const { threadName, participantIDs } = await api.getThreadInfo(threadID);
+    const threadInfo = await api.getThreadInfo(threadID);
+    const { threadName, participantIDs } = threadInfo;
 
     const nameArray = [];
     const mentions = [];
@@ -55,7 +61,7 @@ module.exports.run = async function({ api, event, Users }) {
       }
     }
 
-    const authorData = await Users.getData(event.author);
+    const authorData = await Users.getData(author);
     const adderName = authorData?.name || "رابط الدعوة";
 
     const moment = require("moment-timezone");
@@ -63,7 +69,6 @@ module.exports.run = async function({ api, event, Users }) {
 
     const memberCount = participantIDs.length;
 
-    // الاستايل الذي طلبته مع الحواف والجملة الأصلية
     const msg =
 `◆━━━━━▷ ✦ ◁━━━━━◆
 ❏ أهلاً بـك يا | ${nameArray.join(", ")}
@@ -80,4 +85,3 @@ module.exports.run = async function({ api, event, Users }) {
     console.log("Join error:", e);
   }
 };
-
