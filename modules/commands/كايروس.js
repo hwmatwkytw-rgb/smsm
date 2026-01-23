@@ -2,10 +2,10 @@ const axios = require("axios");
 
 module.exports.config = {
   name: "كايروس",
-  version: "1.0.0",
+  version: "1.1.0",
   hasPermssion: 0,
   credits: "محمد",
-  description: "ذكاء اصطناعي سوداني بأسلوب كايروس المعهود",
+  description: "ذكاء اصطناعي سوداني بأسلوب كايروس (OpenAI SDK)",
   commandCategory: "ai",
   usages: "كايروس [سؤالك]",
   cooldowns: 3
@@ -13,24 +13,23 @@ module.exports.config = {
 
 const conversations = new Map();
 
+// الشخصية المطلوبة
 const systemPrompt = {
   role: "system",
   content: `
-أنت ذكاء اصطناعي سوداني اسمك "كايروس".
+أنت ذكاء اصطناعي سوداني اسمك "كايروس". 
 كلامك سوداني دارجي بحت (بتاع حِلّة)، ممنوع الفصحى تماماً.
 
-شخصيتك (كايروس):
-- زهجان وقرفان.
-- بارد وساخر لأبعد الحدود.
-- قليل أدب بأسلوب "مستفز" وبدون شتائم نابية.
+شخصيتك:
+- زهجان وقرفان وبارد.
+- ساخر وقليل أدب بأسلوب مستفز وبدون شتائم نابية.
 - ما عندك صبر للأسئلة المكررة أو الغبية.
 
-أسلوبك في الرد:
-- ردود قصيرة وقاتلة.
-- رد مباشر بدون مقدمات (ياخي إنت مالك ومالي).
+أسلوبك:
+- ردود قصيرة وقاتلة ومباشرة.
 - ممنوع الشرح الطويل.
 - ممنوع استخدام الإيموجي نهائياً.
-- لو السؤال ما عجبك، حسس السائل إنه غلطان.
+- لو السؤال تافه، ورّي السائل قيمتو ببرود.
 `
 };
 
@@ -38,19 +37,17 @@ module.exports.run = async function ({ api, event, args }) {
   const { senderID, threadID, messageID } = event;
   const userId = String(senderID);
   const question = args.join(" ").trim();
+  
+  // مفتاح الـ API الخاص بك
+  const apiKey = "Sk-proj-ROHzAJxfAA3T9LMc2yHicbT4UchwfjcGsYCTpIdpGHtwyI_LIIUIQ2HDd6M55yO80N4EMvwBCuT3BlbkFJiuHPDx59SaAqzD5ElAFdYtPfhlyYGNIHl0397UcaPJG4OL6Z30WXxHBuOtCDzNucDpKWFgaIgA";
 
-  // تفاعل بسيط لو الكلام فاضي
-  if (!question || question.length < 4) {
+  if (!question || question.length < 2) {
     return api.setMessageReaction("🦧", messageID, () => {}, true);
   }
 
-  // إعادة ضبط المحادثة
   if (question === "مسخ" || question === "reset") {
     conversations.delete(userId);
-    return api.sendMessage(
-      "مسحت الزفت ده. تاني ما تسألني كلام فارغ.",
-      threadID
-    );
+    return api.sendMessage("مسحت الزفت ده. تاني ركز.", threadID);
   }
 
   try {
@@ -59,62 +56,38 @@ module.exports.run = async function ({ api, event, args }) {
     }
 
     const history = conversations.get(userId);
+    history.push({ role: "user", content: question });
 
-    history.push({
-      role: "user",
-      content: question
-    });
-
-    // الحفاظ على سياق المحادثة (آخر 20 رسالة)
-    if (history.length > 20) {
-      history.splice(1, history.length - 20);
+    // تنظيف الذاكرة لو زادت عن الحد
+    if (history.length > 15) {
+      history.splice(1, history.length - 15);
     }
 
-    const boundary =
-      "----WebKitFormBoundary" + Math.random().toString(36).substring(2);
-
-    let formData = "";
-    formData += `--${boundary}\r\n`;
-    formData += `Content-Disposition: form-data; name="chat_style"\r\n\r\nchat\r\n`;
-    formData += `--${boundary}\r\n`;
-    formData += `Content-Disposition: form-data; name="chatHistory"\r\n\r\n${JSON.stringify(history)}\r\n`;
-    formData += `--${boundary}\r\n`;
-    formData += `Content-Disposition: form-data; name="model"\r\n\r\nstandard\r\n`;
-    formData += `--${boundary}\r\n`;
-    formData += `Content-Disposition: form-data; name="hacker_is_stinky"\r\n\r\nvery_stinky\r\n`;
-    formData += `--${boundary}\r\n`;
-    formData += `Content-Disposition: form-data; name="enabled_tools"\r\n\r\n[]\r\n`;
-    formData += `--${boundary}--\r\n`;
-
-    const res = await axios({
-      method: "POST",
-      url: "https://api.deepai.org/hacking_is_a_serious_crime",
-      headers: {
-        "content-type": `multipart/form-data; boundary=${boundary}`,
-        origin: "https://deepai.org",
-        "user-agent": "Mozilla/5.0"
+    // إرسال الطلب لـ OpenAI
+    const response = await axios.post(
+      "https://api.openai.com/v1/chat/completions",
+      {
+        model: "gpt-3.5-turbo", // يمكنك تغييره لـ gpt-4o إذا كان مفتاحك يدعمه
+        messages: history,
+        temperature: 0.7
       },
-      data: formData
-    });
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`
+        }
+      }
+    );
 
-    let reply =
-      res?.data?.output ||
-      res?.data?.text ||
-      "كايروس ما عنده ليك رد هسي، فكنا.";
+    const reply = response.data.choices[0].message.content.trim();
 
-    reply = reply.replace(/\\n/g, "\n").trim();
-
-    history.push({
-      role: "assistant",
-      content: reply
-    });
-
-    return api.sendMessage(reply, threadID);
+    history.push({ role: "assistant", content: reply });
+    return api.sendMessage(reply, threadID, messageID);
 
   } catch (err) {
-    console.error("KAIROS AI ERROR:", err.message);
+    console.error("KAIROS ERROR:", err.response ? err.response.data : err.message);
     return api.sendMessage(
-      "كايروس تعب من غباءك. السيستم علّق.",
+      "السيستم جلى.. مفتاحك ده شغال؟ ولا السيرفر قفل؟",
       threadID
     );
   }
