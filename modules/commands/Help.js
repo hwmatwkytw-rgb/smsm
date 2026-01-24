@@ -24,7 +24,6 @@ module.exports.languages = {
 };
 
 module.exports.run = async function({ api, event, args, getText }) {
-  const fs = require("fs");
   const axios = require("axios");
   const { commands } = global.client;
   const { threadID, messageID } = event;
@@ -48,13 +47,13 @@ module.exports.run = async function({ api, event, args, getText }) {
     }
 
     const categoryMap = {
-      "نظام": "⚙️ أوامر النظام",
-      "ترفية": "🎴 الترفيه",
-      "اقتصاد": "💰 الاقتصاد",
-      "العاب": "🎮 الألعاب",
-      "ذكاء صناعي": "🤖 الذكاء الصناعي",
-      "مطور": "🛠️ أوامر المطور",
-      "عام": "📌 أوامر عامة"
+      "نظام": "أوامر النظام",
+      "ترفية": "أوامر الترفيه",
+      "اقتصاد": "أوامر الاقتصاد",
+      "العاب": "أوامر الألعاب",
+      "ذكاء صناعي": "أوامر الذكاء الصناعي",
+      "مطور": "أوامر المطور",
+      "عام": "أوامر عامة"
     };
 
     let blocks = [];
@@ -62,11 +61,14 @@ module.exports.run = async function({ api, event, args, getText }) {
 
     for (let cat in categories) {
       const cmds = categories[cat].sort();
-      let block = `✦ ───『 ${categoryMap[cat] || cat} 』─── ⚝\n`;
+      let block = `❀ 『 ${categoryMap[cat] || cat} 』 ❀\n`;
 
       for (let i = 0; i < cmds.length; i += 5) {
-        const row = cmds.slice(i, i + 5).join(" │ ");
-        block += `◈ ${row}\n`;
+        const row = cmds
+          .slice(i, i + 5)
+          .map(cmd => `【 ${cmd} 】`)
+          .join(" ");
+        block += `${row}\n`;
         count += cmds.slice(i, i + 5).length;
       }
 
@@ -78,24 +80,26 @@ module.exports.run = async function({ api, event, args, getText }) {
     const page = parseInt(args[0]) || 1;
 
     if (page < 1 || page > totalPages)
-      return api.sendMessage(`⚠️ اختر صفحة بين 1 - ${totalPages}`, threadID, messageID);
+      return api.sendMessage(`اختر صفحة بين 1 - ${totalPages}`, threadID, messageID);
 
     const start = (page - 1) * perPage;
     const finalBlocks = blocks.slice(start, start + perPage).join("\n\n");
 
     const msg = `
-✦ ───『 كايـࢪوس ⚡ قائمة الأوامر 』─── ⚝
+༺❀༻═══════════════════༺❀༻
+        قائمة أوامر 𝐊𝐈𝐅𝐀𝐍 𝐁𝐎𝐓
+༺❀༻═══════════════════༺❀༻
 
 ${finalBlocks}
 
-──────────────
-📌 المجموع: ${count} أمر
-💡 استخدم ${prefix}help [اسم الأمر] لعرض التفاصيل.
+════════════════════════════
+عدد الأوامر: ${count}
+استخدم: ${prefix}help [اسم الأمر]
 
-⇨ البوت: كايـࢪوس
-⇨ المطور: ڪولو
+البوت: 𝐊𝐈𝐅𝐀𝐍 𝐁𝐎𝐓
+المطور: ᎯᏴᎨᏟᎻᎥᎯᎶᎯ Ꮥ.ᎥᏁᎨᎧ
 
-${page === 1 ? "🌸 استغفر الله العظيم وأتوب إليه\n🤍 اللهم صل وسلم على نبينا محمد ﷺ" : ""}
+${page === 1 ? "\nاستغفر الله العظيم وأتوب إليه\nاللهم صل وسلم على نبينا محمد ﷺ" : ""}
 `;
 
     return api.sendMessage(
