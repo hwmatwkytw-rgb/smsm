@@ -1,9 +1,9 @@
 module.exports.config = {
   name: "اوامر",
-  version: "9.5.0",
+  version: "10.1.0",
   hasPermssion: 0,
   credits: "ᎠᎯᏁᎢᎬ ᏚᎮᎯᏒᎠᎯ",
-  description: "قائمة أوامر حديثة بنمط هندسي رفيع لبوت ڪايࢪوس",
+  description: "قائمة أوامر فاخرة لبوت ڪايࢪوس",
   commandCategory: "نظام",
   usages: "[رقم الصفحة / اسم الأمر]",
   cooldowns: 5
@@ -11,7 +11,16 @@ module.exports.config = {
 
 module.exports.languages = {
   "en": {
-    "moduleInfo": "─── ◈ ɪɴғᴏʀᴍᴀᴛɪᴏɴ ◈ ───\n\n⋄ الاسم: %1\n⋄ الوصف: %2\n⋄ الاستخدام: %3\n⋄ الفئة: %4\n⋄ الانتظار: %5s\n⋄ الصلاحية: %6\n\n◈ Credits: %7",
+    "moduleInfo": 
+`╭───〔 📖 معلومات الأمر 〕───╮
+│ ⊹ الاسم: %1
+│ ⊹ الوصف: %2
+│ ⊹ الاستخدام: %3
+│ ⊹ الفئة: %4
+│ ⊹ الانتظار: %5s
+│ ⊹ الصلاحية: %6
+╰──────────────╯
+⊹ المطور: %7`,
     "user": "مستخدم",
     "adminGroup": "مشرف",
     "adminBot": "مطور"
@@ -32,7 +41,7 @@ module.exports.run = async function({ api, event, args, getText }) {
     const categories = {};
     for (let [name, value] of commands) {
       if (value.config.hasPermssion == 2 || value.config.commandCategory?.toLowerCase() === "مطور") continue;
-      const cat = value.config.commandCategory || "General";
+      const cat = value.config.commandCategory || "أخرى";
       if (!categories[cat]) categories[cat] = [];
       categories[cat].push(name);
     }
@@ -40,8 +49,10 @@ module.exports.run = async function({ api, event, args, getText }) {
     let sections = [];
     for (let cat in categories) {
       const cmds = categories[cat].sort();
-      let section = `⌬ ── [ ${cat.toUpperCase()} ]\n`;
-      section += `┊ ➟ ${cmds.join("  •  ")}\n`;
+      let section = 
+`╭─〔 ✦ ${cat} 〕
+│ ${cmds.map(c => `⊹ ${c}`).join("   ")}
+╰────────────`;
       sections.push(section);
     }
 
@@ -51,22 +62,26 @@ module.exports.run = async function({ api, event, args, getText }) {
     if (page < 1 || page > totalPages) page = 1;
 
     const start = (page - 1) * itemsPerPage;
-    const displaySections = sections.slice(start, start + itemsPerPage).join("┊\n");
+    const displaySections = sections.slice(start, start + itemsPerPage).join("\n\n");
 
     const msg = 
-`『 ᴋᴀɪʀᴏs ᴄᴏᴍᴍᴀɴᴅs 』
-─── · · · ───
+`┌──────────────────────────┐
+   𓆩 𝗞𝗔𝗜𝗥𝗢𝗦 𝗖𝗢𝗠𝗠𝗔𝗡𝗗𝗦 𓆪
+└──────────────────────────┘
 
 ${displaySections}
 
-─── · · · ───
-◈ الأوامر: ${commands.size}
-◈ الصفحة: ${page} / ${totalPages}
-◈ الرمز: ${prefix}
-─── · · · ───
-🤖 اسم البوت: ڪايࢪوس
-👑 المطوࢪ: ᎠᎯᏁᎢᎬ ᏚᎮᎯᏒᎠᎯ
-✨ اللهم صلِّ وسلم على سيدنا محمد 🤍🍂`;
+╭────────────────────╮
+│ ⊹ عدد الأوامر: ${commands.size}
+│ ⊹ الصفحة: ${page} / 3
+│ ⊹ الرمز: ${prefix}
+╰────────────────────╯
+
+╭────────────────────╮
+│ 🤖 اسم البوت: ڪايࢪوس
+│ 👑 المطور: ᎠᎯᏁᎢᎬ ᏚᎮᎯᏒᎠᎯ
+│ 📖 استخدم: help اسم الأمر لعرض التفاصيل
+╰────────────────────╯`;
 
     try {
       const image = (await axios.get(imageUrl, { responseType: "stream" })).data;
@@ -77,7 +92,20 @@ ${displaySections}
   }
 
   return api.sendMessage(
-    getText("moduleInfo", command.config.name, command.config.description, `${prefix}${command.config.name} ${(command.config.usages) ? command.config.usages : ""}`, command.config.commandCategory, command.config.cooldowns, (command.config.hasPermssion == 0) ? getText("user") : (command.config.hasPermssion == 1) ? getText("adminGroup") : getText("adminBot"), command.config.credits),
+    getText(
+      "moduleInfo",
+      command.config.name,
+      command.config.description,
+      `${prefix}${command.config.name} ${(command.config.usages) ? command.config.usages : ""}`,
+      command.config.commandCategory,
+      command.config.cooldowns,
+      (command.config.hasPermssion == 0)
+        ? getText("user")
+        : (command.config.hasPermssion == 1)
+        ? getText("adminGroup")
+        : getText("adminBot"),
+      command.config.credits
+    ),
     threadID,
     messageID
   );
