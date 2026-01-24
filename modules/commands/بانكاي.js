@@ -1,106 +1,74 @@
-module.exports.config = {
-  name: "بانكاي",
-  version: "1.1",
-  hasPermission: 1,
-  credits: "Rako San",
-  description: "طرد عضو عبر التاغ أو الرد على رسالته",
-  commandCategory: "مطور",
-  usages: "طرد @تاغ | أو رد على العضو",
-  cooldowns: 5
-};
-
 const axios = require("axios");
 const fs = require("fs");
 
-module.exports.run = async function({ api, event, args, Users, Threads}) {
-  const { threadID, messageID, senderID, mentions, messageReply} = event;
-
-  // تحقق من صلاحية الأدمن داخل المجموعة
-  const threadInfo = await api.getThreadInfo(threadID);
-  const isAdmin = threadInfo.adminIDs.some(admin => admin.id === senderID);
-  if (!isAdmin && senderID!== DEVELOPER_ID) {
-    return api.sendMessage("ارقص تاني ( 𖠂_𖠂)", threadID, messageID);
-  }
-
-  let targetID = null;
-
-  if (messageReply?.senderID) {
-    targetID = messageReply.senderID;
-  } else if (Object.keys(mentions).length > 0) {
-    targetID = Object.keys(mentions)[0];
-  }
-
-  // لو مافي تاق
-  if (!targetID) {
-    return api.sendMessage("اعمل تاق للعب عشان يتحشا 🐸💔", threadID, (err, info) => {
-      global.client.handleReply.push({
-        name: module.exports.config.name,
-        messageID: info.messageID,
-        author: senderID,
-        threadID
-      });
-    }, messageID);
-  }
-
-  // لو الأدمن عمل تاق للبوت نفسه
-  if (targetID === api.getCurrentUserID()) {
-    return api.sendMessage("وزع ي عب مبتقدر تطردني ʕᴗᴥಡ҂ʔ", threadID, messageID);
-  }
-
-  try {
-    await api.removeUserFromGroup(targetID, threadID);
-
-    // إرسال الصورة مع الرسالة بعد الطرد مباشرة
-    const imageUrl = "https://i.ibb.co/dwvYh0Yz/3098e2fb48d8ac91fe240de5ba4ff977.jpg";
-    const path = __dirname + "/temp_ban.jpg";
-    const response = await axios.get(imageUrl, { responseType: "arraybuffer" });
-    fs.writeFileSync(path, Buffer.from(response.data, "utf-8"));
-
-    api.sendMessage({
-      body: "تم تنفيذ حكم الاعدام 🐸☝🏿",
-      attachment: fs.createReadStream(path)
-    }, threadID, messageID);
-
-    // ✅ إزالة حذف الصورة لتبقى موجودة
-
-  } catch (err) {
-    console.error("❌ فشل في طرد العضو:", err.message);
-    api.sendMessage("⚠️ ما قدرت أطرد العضو، تحقق من صلاحيات البوت.", threadID, messageID);
-  }
+module.exports.config = {
+  name: "بانكاي",
+  version: "1.5",
+  hasPermission: 1,
+  credits: "Rako San",
+  description: "طرد عضو عبر التاغ أو الرد بكلمة بانكاي",
+  commandCategory: "مطور",
+  usages: "بانكاي @تاغ | أو رد بكلمة بانكاي",
+  cooldowns: 5
 };
 
-module.exports.handleReply = async function({ api, event, handleReply}) {
-  const { threadID, messageID, senderID, messageReply} = event;
+const DEVELOPER_ID = "61581906898524";
 
-  // تحقق أن الرد من نفس الأدمن
-  if (senderID !== handleReply.author || threadID !== handleReply.threadID) return;
-
-  const targetID = messageReply?.senderID;
-  if (!targetID) return;
-
-  // لو الأدمن رد على رسالة البوت نفسها (يحاول يطرده)
-  if (targetID === api.getCurrentUserID()) {
-    return api.sendMessage("وزع يمعاق مبتقدر تطردني ʕᴗᴥಡ҂ʔ", threadID, messageID);
-  }
+module.exports.run = async function({ api, event, args }) {
+  const { threadID, messageID, senderID, mentions, messageReply } = event;
 
   try {
+    const threadInfo = await api.getThreadInfo(threadID);
+    
+    // 1. التحقق من صلاحية المستخدم (أدمن أو مطور)
+    const isAdmin = threadInfo.adminIDs.some(admin => admin.id === senderID);
+    if (!isAdmin && senderID !== DEVELOPER_ID) {
+      return api.sendMessage("ارقص تاني ( 𖠂_𖠂)", threadID, messageID);
+    }
+
+    // 2. التحقق من صلاحية البوت (هل هو أدمن؟)
+    const botID = api.getCurrentUserID();
+    const isBotAdmin = threadInfo.adminIDs.some(admin => admin.id === botID);
+    if (!isBotAdmin) {
+      return api.sendMessage("ارفع ابوك دا ادمن اول 🐢", threadID, messageID);
+    }
+
+    let targetID = null;
+
+    // 3. تحديد الهدف (عبر الرد أو التاغ)
+    if (messageReply && messageReply.senderID) {
+      targetID = messageReply.senderID;
+    } else if (Object.keys(mentions).length > 0) {
+      targetID = Object.keys(mentions)[0];
+    }
+
+    // 4. إذا لم يتم تحديد هدف
+    if (!targetID) {
+      return api.sendMessage("اعمل تاق للعب او رد على رسالتو 🐢", threadID, messageID);
+    }
+
+    // 5. منع طرد البوت لنفسه
+    if (targetID === botID) {
+      return api.sendMessage("وزع ي عب مبتقدر تطردني ʕᴗᴥdad҂ʔ", threadID, messageID);
+    }
+
+    // تنفيذ الطرد
     await api.removeUserFromGroup(targetID, threadID);
 
-    // إرسال الصورة مع الرسالة بعد الطرد مباشرة
+    // إرسال الصورة والرسالة
     const imageUrl = "https://i.ibb.co/dwvYh0Yz/3098e2fb48d8ac91fe240de5ba4ff977.jpg";
-    const path = __dirname + "/temp_ban.jpg";
+    const path = __dirname + `/cache/bankai_${targetID}.jpg`;
+
     const response = await axios.get(imageUrl, { responseType: "arraybuffer" });
-    fs.writeFileSync(path, Buffer.from(response.data, "utf-8"));
+    fs.writeFileSync(path, Buffer.from(response.data, "binary"));
 
     api.sendMessage({
       body: "تم تنفيذ حكم الاعدام 🐸☝🏿",
       attachment: fs.createReadStream(path)
     }, threadID, messageID);
 
-    // ✅ الصورة تبقى موجودة ولا نحذفها
-
-  } catch (err) {
-    console.error("❌ فشل في طرد العضو:", err.message);
-    api.sendMessage("⚠️ ما قدرت أطرد العضو، تحقق من صلاحيات البوت.", threadID, messageID);
+  } catch (error) {
+    console.error(error);
+    api.sendMessage("⚠️ حدث خطأ، تأكد من إعدادات المجموعة.", threadID, messageID);
   }
 };
