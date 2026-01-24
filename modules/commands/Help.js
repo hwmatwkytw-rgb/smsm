@@ -1,6 +1,8 @@
+const axios = require("axios");
+
 module.exports.config = {
   name: "اوامر",
-  version: "1.0.6",
+  version: "2.1.0",
   hasPermssion: 0,
   credits: "انس",
   description: "قائمة الأوامر",
@@ -14,80 +16,93 @@ module.exports.config = {
 
 module.exports.languages = {
   "en": {
-    "moduleInfo": "「 %1 」\n❯ Usage: %3\n❯ Category: %4\n❯ Waiting time: %5 seconds(s)\n❯ Permission: %6\n\n» Module code by %7 «",
+    "moduleInfo": "「 %1 」",
     "user": "User",
     "adminGroup": "Admin group",
     "adminBot": "Admin bot"
   }
 };
 
-module.exports.handleEvent = function ({ api, event, getText }) {
-  const { commands } = global.client;
-  const { threadID, messageID, body } = event;
+module.exports.handleEvent = function () {};
 
-  if (!body || typeof body == "cmd" || body.indexOf("help") != 0) return;
-  const splitBody = body.slice(body.indexOf("help")).trim().split(/\s+/);
-  if (splitBody.length == 1 || !commands.has(splitBody[1].toLowerCase())) return;
-
-  const threadSetting = global.data.threadData.get(parseInt(threadID)) || {};
-  const command = commands.get(splitBody[1].toLowerCase());
-  const prefix = (threadSetting.hasOwnProperty("PREFIX")) ? threadSetting.PREFIX : global.config.PREFIX;
-
-  return api.sendMessage(
-    getText(
-      "moduleInfo",
-      command.config.name,
-      "",
-      `${prefix}${command.config.name}`,
-      command.config.commandCategory,
-      command.config.cooldowns,
-      ((command.config.hasPermssion == 0)
-        ? getText("user")
-        : (command.config.hasPermssion == 1)
-        ? getText("adminGroup")
-        : getText("adminBot")),
-      command.config.credits
-    ),
-    threadID,
-    messageID
-  );
-};
-
-module.exports.run = function({ api, event, args }) {
+module.exports.run = async function({ api, event, args }) {
   const { commands } = global.client;
   const { threadID, messageID } = event;
+
   const threadSetting = global.data.threadData.get(parseInt(threadID)) || {};
-  const prefix = (threadSetting.hasOwnProperty("PREFIX")) ? threadSetting.PREFIX : global.config.PREFIX;
+  const prefix = (threadSetting.hasOwnProperty("PREFIX"))
+    ? threadSetting.PREFIX
+    : global.config.PREFIX;
+
+  const imageUrl = "https://i.ibb.co/xWBw1y4/22ed4e077eadba33e9b9f78a64317ab9.jpg";
 
   // فلترة أوامر المطور
-  const arrayInfo = Array.from(commands.values())
-    .filter(cmd => cmd.config.hasPermssion !== 2)
-    .map(cmd => cmd.config.name)
-    .sort();
+  const allCommands = Array.from(commands.values())
+    .filter(cmd => cmd.config.hasPermssion !== 2);
 
-  const page = parseInt(args[0]) || 1;
-  const numberOfOnePage = 100;
-  const startSlice = numberOfOnePage * page - numberOfOnePage;
-  const returnArray = arrayInfo.slice(startSlice, startSlice + numberOfOnePage);
+  // تجميع حسب الفئة
+  let categories = {};
+  for (const cmd of allCommands) {
+    const cat = cmd.config.commandCategory || "غير مصنفة";
+    if (!categories[cat]) categories[cat] = [];
+    categories[cat].push(cmd.config.name);
+  }
+
+  // دمج الفئات الصغيرة
+  const merged = {};
+  merged["متنوعة"] = [];
+
+  for (const [cat, cmds] of Object.entries(categories)) {
+    if (cmds.length < 5) {
+      merged["متنوعة"].push(...cmds);
+    } else {
+      merged[cat] = cmds;
+    }
+  }
+
+  // بناء كل فئة بشكل جميل مع فواصل
+  let blocks = [];
+  for (const [cat, cmds] of Object.entries(merged)) {
+    let block = `【 ${cat} 】\n`;
+    for (let i = 0; i < cmds.length; i += 4) {
+      block += "│ " + cmds.slice(i, i + 4).join(" • ") + "\n";
+    }
+    block += "╰───────────────⋅⋅\n";
+    blocks.push(block);
+  }
+
+  // تقسيم إلى 3 صفحات
+  const pages = [[], [], []];
+  blocks.forEach((b, i) => {
+    pages[i % 3].push(b);
+  });
+
+  const page = Math.max(1, Math.min(3, parseInt(args[0]) || 1));
+  const content = pages[page - 1].join("\n");
 
   let msg = "╭─⋅⋅─☾─⋅⋅─╮\n";
   msg += "  ◆ ◈ قائمة أوامر Kiros ◈ ◆\n";
   msg += "╰─⋅⋅─☾─⋅⋅─╯\n\n";
 
-  // كل سطر 4 أوامر
-  for (let i = 0; i < returnArray.length; i += 4) {
-    msg += "│ " + returnArray.slice(i, i + 4).join(" • ") + "\n";
-  }
+  msg += content;
 
-  msg += "╰─────────⋅⋅\n\n";
-
-  msg += `╭─⋅⋅─☾─⋅⋅─╮
- › إجمالي الأوامر: ${arrayInfo.length}
- › الصفحة: ${page}/${Math.ceil(arrayInfo.length / numberOfOnePage)}
+  msg += `\n╭─⋅⋅─☾─⋅⋅─╮
+ › إجمالي الأوامر: ${allCommands.length}
+ › الصفحة: ${page}/3
  › اسم البوت: Kiros
  › المطور: ᎠᎯᏁᎢᎬᏚᎮᎯᏒᎠᎯ
- › استخدم: ${prefix}اوامر [رقم الصفحة]
+ › استخدم: ${prefix}اوامر [1-3]
 ╰─⋅⋅─☾─⋅⋅─╯`;
 
-  return api.sendMessage(msg, threadID, messageID);
+  // جلب الصورة وإرسالها كمرفق
+  const imgStream = (await axios.get(imageUrl, { responseType: "stream" })).data;
+
+  return api.sendMessage(
+    {
+      body: msg,
+      attachment: imgStream
+    },
+    threadID,
+    messageID
+  );
 };
