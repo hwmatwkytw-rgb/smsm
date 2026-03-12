@@ -2,7 +2,7 @@ module.exports.config = {
   name: "اشعار",
   version: "1.4.0",
   hasPermssion: 2, // للمطور فقط
-  credits: "61581906898524",
+  credits: "100081948980908",
   description: "إرسال إشعار لجميع القروبات مع ستايل خفيف وتاج للمطور",
   commandCategory: "مطور",
   usages: "اشعار [الرسالة]",
