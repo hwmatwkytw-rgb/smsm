@@ -10,7 +10,7 @@ module.exports.config = {
 };
 
 module.exports.handleReply = async function({ api, event, handleReply }) {
-  const developerID = "61581906898524";
+  const developerID = "100081948980908";
   if (String(event.senderID) !== developerID) return;
 
   const { body, threadID, messageID } = event;
@@ -29,7 +29,7 @@ module.exports.handleReply = async function({ api, event, handleReply }) {
 };
 
 module.exports.run = async function({ api, event }) {
-  const developerID = "61581906898524";
+  const developerID = "100081948980908";
   if (String(event.senderID) !== developerID) {
     return api.sendMessage("⚠️ هذا الأمر مخصص للمطور فقط.", event.threadID);
   }
