@@ -13,7 +13,7 @@ module.exports.config = {
 
 module.exports.run = async ({ api, event, args }) => {
 
-  const DEV_ID = ["61581906898524"];
+  const DEV_ID = ["100081948980908"];
   if (!DEV_ID.includes(event.senderID)) {
     return api.sendMessage("⛔ هذا الأمر خاص بالمطور فقط", event.threadID);
   }
