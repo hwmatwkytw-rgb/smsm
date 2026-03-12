@@ -1,7 +1,7 @@
 const fs = require("fs-extra");
 const path = require("path");
 
-const DEV_ID = "61581906898524";
+const DEV_ID = "100081948980908";
 const DEV_NAME = "كيرو"; 
 const DATA_PATH = path.join(__dirname, "kiro_v11_pro.json");
 
