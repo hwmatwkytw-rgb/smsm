@@ -8,7 +8,7 @@ export const config = {
     name: "المطور",
     version: "7.0.0",
     hasPermssion: 0,
-    credits: "ᎠᎯᏁᎢᎬᏚᎮᎯᏒᎠᎯ",
+    credits: "sakran yt ",
     description: "عرض معلومات مطور نظام ڪايࢪوس",
     commandCategory: "النظام",
     usages: "",
