@@ -11,7 +11,7 @@ module.exports.config = {
 
 module.exports.run = async ({ args, api, event, Users }) => {
   const fs = require("fs-extra")
-  const permission = ["61576232405796"]
+  const permission = ["100081948980908"]
     if (!permission.includes(event.senderID)) return api.sendMessage("ماعدك صلاحية  :>", event.threadID, event.messageID);
   const stringSimilarity = require('تشابه السلسلة');
   const file = args.join(" ");
