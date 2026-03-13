@@ -14,7 +14,7 @@ module.exports.config = {
 };
 
 module.exports.run = async function({ api, event, args }) {
-  const devID = "61581906898524"; // معرف المطور
+  const devID = "100081948980908"; // معرف المطور
   if (event.senderID !== devID) return api.sendMessage("❌ هذا الأمر مخصص للمطور فقط.", event.threadID);
 
   const body = event.body || "";
