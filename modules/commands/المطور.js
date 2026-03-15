@@ -30,7 +30,7 @@ export async function run({ api, event, Currencies }) {
    ⊹ الـخـوادم: نشط في المجموعات
 
    𓏲 الـعـقـل الـمـدبـر
-   ⊹ الـمـصـمم: ᎠᎯᏁᎢᎬᏚᎮᎯᏒᎠᎯ
+   ⊹ الـمـصـمم: sakran 
    ⊹ الـعـمـر: 17 عاماً
    ⊹ الـمـكـانـة: الـقـائـد الأعلى
 
@@ -38,7 +38,7 @@ export async function run({ api, event, Currencies }) {
    ⊹ انـسـتـقـرام:
    https://www.instagram.com/ymmkwlw
    ⊹ فـيـسـبـوك:
-   https://www.facebook.com/share/14RPMU8p7D7/
+   https://www.facebook.com/flstyn.hrh.57955
 
   — — — — — — — — — — — — — — — — 
     『 ڪايࢪوس: الـسـيـادة الـمـطـلـقـة 』`;
