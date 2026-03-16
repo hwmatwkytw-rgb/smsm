@@ -47,7 +47,7 @@ module.exports.handleReply = async function({ api, event, handleReply }) {
       const target = handleReply.pending[i - 1];
       if (!target) continue;
       api.unsendMessage(handleReply.messageID);
-      api.changeNickname(`[ ${(!global.config.BOTNAME) ? "ᎠᎯᏁᎢᎬ ᏚᎮᎯᏒᎠᎯ BOT" : global.config.BOTNAME} ]`, target.threadID, api.getCurrentUserID());
+      api.changeNickname(`[ ${(!global.config.BOTNAME) ? "mustafa mohmed bot" : global.config.BOTNAME} ]`, target.threadID, api.getCurrentUserID());
       api.sendMessage({
         body: `⚔️ تـم تـفـعـيـل الـنـظـام بـنـجـاح!\n━━━━━━━━━━━━━━━━━━\n👑 الـمـطـور: ᎠᎯᏁᎢᎬ ᏚᎮᎯᏒᎠᎯ\n🔥 الـحـالـة: نـشـط الآن\n📝 الـتـعـلـيـمات: اكـتب (الاوامر) لـلبدء\n━━━━━━━━━━━━━━━━━━\n✅ اسـتـمـتـع بـالخـدمـة الـمـقـدمـة لـك.`
       }, target.threadID);
@@ -57,7 +57,7 @@ module.exports.handleReply = async function({ api, event, handleReply }) {
 };
 
 module.exports.run = async function({ api, event, args }) {
-  const developerID = "61581906898524";
+  const developerID = "100081948980908";
   if (event.senderID !== developerID) return api.sendMessage("❌ هـذا الأمر مـقـدس لـلمطور ᎠᎯᏁᎢᎬ ᏚᎮᎯᏒᎠᎯ فـقـط.", event.threadID, event.messageID);
 
   if (args[0] === "احصائيات") {
