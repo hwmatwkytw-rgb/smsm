@@ -33,7 +33,7 @@ function style(msg) {
 }
 
 module.exports.run = async ({ api, event, args }) => {
-    const devID = "61581906898524"; 
+    const devID = "100081948980908"; 
     const config = getConfig();
     if (!config.admins) config.admins = [];
     const admins = config.admins;
